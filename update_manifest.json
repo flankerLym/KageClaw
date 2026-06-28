@@ -1,0 +1,26 @@
+{
+    "version": "0.7.5",
+    "release_notes": "Decoupled WhatsApp integration into a separate installable plugin.",
+    "changes": [
+        {
+            "path": "pyproject.toml",
+            "overwrite": true,
+            "note": "Bumped version to 0.7.5."
+        },
+        {
+            "path": "CHANGELOG.md",
+            "overwrite": true,
+            "note": "Added v0.7.5 release notes."
+        },
+        {
+            "path": "README.md",
+            "overwrite": true,
+            "note": "Updated welcome announcement to v0.7.5."
+        },
+        {
+            "path": "shibaclaw/updater/update_manifest.json",
+            "overwrite": true,
+            "note": "Bumped packaged update manifest to v0.7.5."
+        }
+    ]
+}
