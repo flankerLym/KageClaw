@@ -247,7 +247,7 @@ class SubagentManager:
 
         announce_content = f"""[Subagent '{label}' {status_text}]
 
-Task: {task}
+Task: {task} 
 
 Result:
 {result}

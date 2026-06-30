@@ -1,13 +1,13 @@
-import json
+﻿import json
 from types import SimpleNamespace
 
 import pytest
 from starlette.requests import Request
 
-from shibaclaw.config.loader import _migrate_config
-from shibaclaw.config.schema import Config
-from shibaclaw.webui.agent_manager import agent_manager
-from shibaclaw.webui.routers.settings import api_models_get, api_settings_post
+from KAGECLAW.config.loader import _migrate_config
+from KAGECLAW.config.schema import Config
+from KAGECLAW.webui.agent_manager import agent_manager
+from KAGECLAW.webui.routers.settings import api_models_get, api_settings_post
 
 
 def _json_request(payload: dict) -> Request:
@@ -47,8 +47,8 @@ def _get_request(path: str = "/api/models", query_string: str = "") -> Request:
 
 @pytest.mark.asyncio
 async def test_api_settings_post_replaces_deleted_mcp_servers(monkeypatch):
-    import shibaclaw.cli.commands as commands_module
-    import shibaclaw.config.loader as loader_module
+    import KAGECLAW.cli.commands as commands_module
+    import KAGECLAW.config.loader as loader_module
 
     original_config = agent_manager.config
     original_provider = agent_manager.provider
@@ -101,8 +101,8 @@ def test_migrate_config_keeps_empty_mcp_servers_empty():
 
 @pytest.mark.asyncio
 async def test_api_models_get_aggregates_all_configured_providers(monkeypatch):
-    import shibaclaw.cli.auth as auth_module
-    import shibaclaw.cli.base as base_module
+    import KAGECLAW.cli.auth as auth_module
+    import KAGECLAW.cli.base as base_module
 
     original_config = agent_manager.config
     original_provider = agent_manager.provider
@@ -167,3 +167,4 @@ async def test_api_models_get_aggregates_all_configured_providers(monkeypatch):
     finally:
         agent_manager.config = original_config
         agent_manager.provider = original_provider
+

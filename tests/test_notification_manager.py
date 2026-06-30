@@ -1,4 +1,4 @@
-from shibaclaw.helpers.notification_manager import NotificationManager
+﻿from KAGECLAW.helpers.notification_manager import NotificationManager
 
 
 def test_notification_manager_dedupes_update_notifications():
@@ -70,3 +70,4 @@ def test_notification_manager_uses_completion_titles_for_heartbeat_and_cron():
     assert cron["title"] == "Cron job completed"
     assert cron["action"]["kind"] == "session"
     assert cron["action"]["target"] == "webui:cron-session"
+

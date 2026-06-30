@@ -1,17 +1,17 @@
-from unittest.mock import patch, AsyncMock
+﻿from unittest.mock import patch, AsyncMock
 import pytest
 from starlette.testclient import TestClient
 
-from shibaclaw.config.schema import Config
-from shibaclaw.webui.agent_manager import agent_manager
-from shibaclaw.webui.server import create_app
+from KAGECLAW.config.schema import Config
+from KAGECLAW.webui.agent_manager import agent_manager
+from KAGECLAW.webui.server import create_app
 
 
 @pytest.fixture
 def mock_config(tmp_path):
     config = Config()
     config.agents.defaults.workspace = str(tmp_path)
-    with patch("shibaclaw.webui.auth._auth_enabled", return_value=False):
+    with patch("KAGECLAW.webui.auth._auth_enabled", return_value=False):
         yield config, object()
 
 
@@ -25,7 +25,7 @@ def client(mock_config):
 
 
 def test_whatsapp_default_config():
-    from shibaclaw_channel_whatsapp.channel import WhatsAppChannel
+    from KAGECLAW_channel_whatsapp.channel import WhatsAppChannel
     cfg = WhatsAppChannel.default_config()
     assert cfg["bridgeUrl"] == "ws://localhost:3001"
     assert cfg["enabled"] is False
@@ -33,7 +33,7 @@ def test_whatsapp_default_config():
 
 
 def test_whatsapp_config_validation():
-    from shibaclaw_channel_whatsapp.channel import WhatsAppConfig
+    from KAGECLAW_channel_whatsapp.channel import WhatsAppConfig
     cfg = WhatsAppConfig.model_validate({
         "enabled": True,
         "bridgeUrl": "ws://localhost:3001",
@@ -47,33 +47,33 @@ def test_whatsapp_config_validation():
 
 
 def test_whatsapp_not_in_builtin_registry():
-    from shibaclaw.integrations.registry import discover_channel_names
+    from KAGECLAW.integrations.registry import discover_channel_names
     channels = discover_channel_names()
     assert "whatsapp" not in channels
 
 
 def test_api_plugins_list_includes_whatsapp_available(client):
-    with patch("shibaclaw.webui.routers.plugins.discover_plugins", return_value={}), \
-         patch("shibaclaw.webui.routers.plugins.discover_tts_plugins", return_value={}):
+    with patch("KAGECLAW.webui.routers.plugins.discover_plugins", return_value={}), \
+         patch("KAGECLAW.webui.routers.plugins.discover_tts_plugins", return_value={}):
         response = client.get("/api/plugins")
     assert response.status_code == 200
     data = response.json()
     available_names = [p["name"] for p in data["available"]]
-    assert "shibaclaw-channel-whatsapp" in available_names
+    assert "KAGECLAW-channel-whatsapp" in available_names
 
 
 def test_api_plugins_list_whatsapp_installed_not_in_available(client):
-    from shibaclaw_channel_whatsapp.channel import WhatsAppChannel
+    from KAGECLAW_channel_whatsapp.channel import WhatsAppChannel
     mock_installed = {"whatsapp": WhatsAppChannel}
 
-    with patch("shibaclaw.webui.routers.plugins.discover_plugins", return_value=mock_installed), \
-         patch("shibaclaw.webui.routers.plugins.discover_tts_plugins", return_value={}):
+    with patch("KAGECLAW.webui.routers.plugins.discover_plugins", return_value=mock_installed), \
+         patch("KAGECLAW.webui.routers.plugins.discover_tts_plugins", return_value={}):
         response = client.get("/api/plugins")
     assert response.status_code == 200
     data = response.json()
     available_names = [p["name"] for p in data["available"]]
     installed_names = [p["name"] for p in data["plugins"]]
-    assert "shibaclaw-channel-whatsapp" not in available_names
+    assert "KAGECLAW-channel-whatsapp" not in available_names
     assert "whatsapp" in installed_names
 
 
@@ -85,9 +85,9 @@ async def test_api_install_whatsapp_plugin(client):
 
     with patch("asyncio.create_subprocess_exec", return_value=mock_proc), \
          patch("asyncio.sleep", new_callable=AsyncMock), \
-         patch("shibaclaw.webui.routers.system._schedule_restart_outside_loop"), \
-         patch("shibaclaw.webui.routers.system._graceful_shutdown_server"):
-        response = client.post("/api/plugins/install", json={"package": "shibaclaw-channel-whatsapp"})
+         patch("KAGECLAW.webui.routers.system._schedule_restart_outside_loop"), \
+         patch("KAGECLAW.webui.routers.system._graceful_shutdown_server"):
+        response = client.post("/api/plugins/install", json={"package": "KAGECLAW-channel-whatsapp"})
     assert response.status_code == 200
     data = response.json()
     assert data["ok"] is True
@@ -102,10 +102,11 @@ async def test_api_uninstall_whatsapp_plugin(client):
 
     with patch("asyncio.create_subprocess_exec", return_value=mock_proc), \
          patch("asyncio.sleep", new_callable=AsyncMock), \
-         patch("shibaclaw.webui.routers.system._schedule_restart_outside_loop"), \
-         patch("shibaclaw.webui.routers.system._graceful_shutdown_server"):
-        response = client.post("/api/plugins/uninstall", json={"package": "shibaclaw-channel-whatsapp"})
+         patch("KAGECLAW.webui.routers.system._schedule_restart_outside_loop"), \
+         patch("KAGECLAW.webui.routers.system._graceful_shutdown_server"):
+        response = client.post("/api/plugins/uninstall", json={"package": "KAGECLAW-channel-whatsapp"})
     assert response.status_code == 200
     data = response.json()
     assert data["ok"] is True
     assert data["restarting"] is True
+

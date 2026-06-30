@@ -1,5 +1,5 @@
-import os
-from shibaclaw.agent.context import ScentBuilder
+﻿import os
+from KAGECLAW.agent.context import ScentBuilder
 
 
 def test_scent_builder_image_encoding_cache(tmp_path):
@@ -48,4 +48,5 @@ def test_scent_builder_image_cache_eviction(tmp_path):
     assert str((tmp_path / "test_2.png").resolve()) not in builder._image_cache
     assert str((tmp_path / "test_3.png").resolve()) in builder._image_cache
     assert str((tmp_path / "test_34.png").resolve()) in builder._image_cache
+
 

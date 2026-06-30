@@ -1,7 +1,7 @@
-import json
+﻿import json
 import time
 
-from shibaclaw.brain.manager import PackManager, Session
+from KAGECLAW.brain.manager import PackManager, Session
 
 
 def test_pack_manager_reloads_cached_session_when_file_changes(tmp_path):
@@ -60,3 +60,4 @@ def test_pack_manager_save_append_vs_full_rewrite(tmp_path):
     lines3 = content_after_save3.splitlines()
     assert len(lines3) == 4
     assert '"modified": true' in lines3[0]
+

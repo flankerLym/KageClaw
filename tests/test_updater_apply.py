@@ -1,8 +1,8 @@
-from pathlib import Path
+﻿from pathlib import Path
 
 
 def test_apply_update_returns_manual_report_for_docker(tmp_path):
-    from shibaclaw.updater.apply import apply_update
+    from KAGECLAW.updater.apply import apply_update
 
     report = apply_update(
         {
@@ -10,7 +10,7 @@ def test_apply_update_returns_manual_report_for_docker(tmp_path):
             "latest": "0.3.8",
             "action_kind": "manual-command",
             "action_label": "Pull latest image",
-            "action_command": "docker pull rikyz90/shibaclaw:latest",
+            "action_command": "docker pull rikyz90/KAGECLAW:latest",
         },
         tmp_path,
     )
@@ -22,7 +22,7 @@ def test_apply_update_returns_manual_report_for_docker(tmp_path):
 
 
 def test_apply_update_runs_backup_and_pip_for_pip(tmp_path, monkeypatch):
-    from shibaclaw.updater import apply
+    from KAGECLAW.updater import apply
 
     personal_file = tmp_path / "USER.md"
     personal_file.write_text("customized\n", encoding="utf-8")
@@ -50,7 +50,7 @@ def test_apply_update_runs_backup_and_pip_for_pip(tmp_path, monkeypatch):
 
 
 def test_apply_update_supports_manifest_only_payload(tmp_path, monkeypatch):
-    from shibaclaw.updater import apply
+    from KAGECLAW.updater import apply
 
     monkeypatch.setattr(apply, "get_installation_method", lambda: "pip")
     monkeypatch.setattr(apply, "_pip_upgrade", lambda version: {"ok": True, "output": version})
@@ -62,7 +62,7 @@ def test_apply_update_supports_manifest_only_payload(tmp_path, monkeypatch):
 
 
 def test_apply_update_runs_exe_for_exe(tmp_path, monkeypatch):
-    from shibaclaw.updater import apply
+    from KAGECLAW.updater import apply
 
     monkeypatch.setattr(
         apply,
@@ -78,7 +78,7 @@ def test_apply_update_runs_exe_for_exe(tmp_path, monkeypatch):
             "install_method": "exe",
             "latest": "0.3.8",
             "action_kind": "automatic",
-            "action_url": "https://example.com/ShibaClaw.zip",
+            "action_url": "https://example.com/KAGECLAW.zip",
         },
         tmp_path,
         manifest={"version": "0.3.8", "changes": []},
@@ -86,5 +86,6 @@ def test_apply_update_runs_exe_for_exe(tmp_path, monkeypatch):
 
     assert report["requires_manual_action"] is False
     assert report["exe"]["ok"] is True
-    assert "https://example.com/ShibaClaw.zip" in report["exe"]["output"]
+    assert "https://example.com/KAGECLAW.zip" in report["exe"]["output"]
+
 

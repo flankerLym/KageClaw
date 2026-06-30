@@ -1,7 +1,7 @@
-import asyncio
+﻿import asyncio
 from types import SimpleNamespace
 
-from shibaclaw.thinkers.openai_provider import OpenAIThinker
+from KAGECLAW.thinkers.openai_provider import OpenAIThinker
 
 
 def test_parse_response_preserves_provider_specific_tool_call_fields():
@@ -137,7 +137,7 @@ def test_chat_streaming_preserves_provider_specific_tool_call_fields():
 
 
 def test_github_copilot_get_available_models_refreshes_session_token():
-    from shibaclaw.thinkers.github_copilot_provider import GithubCopilotThinker
+    from KAGECLAW.thinkers.github_copilot_provider import GithubCopilotThinker
 
     class FakeModels:
         async def list(self):
@@ -157,3 +157,4 @@ def test_github_copilot_get_available_models_refreshes_session_token():
 
     assert thinker._client.api_key == "copilot-session-token"
     assert models == [{"id": "gpt-4.1", "name": "GPT-4.1"}]
+

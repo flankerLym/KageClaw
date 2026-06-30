@@ -1,6 +1,6 @@
-import pytest
+﻿import pytest
 from unittest.mock import AsyncMock, patch
-from shibaclaw.webui.gateway_client import _http_get, _http_post, _http_delete
+from KAGECLAW.webui.gateway_client import _http_get, _http_post, _http_delete
 
 
 class MockStreamReader:
@@ -102,3 +102,4 @@ async def test_http_delete_fail_status_body_200():
     with patch("asyncio.open_connection", AsyncMock(return_value=(reader, writer))):
         res = await _http_delete(["localhost"], 8000, "/api/test", "token123")
         assert res is None
+
