@@ -5,6 +5,9 @@ WORKDIR /app
 ENV PYTHONUNBUFFERED=1
 ENV PIP_NO_CACHE_DIR=1
 
+RUN sed -i 's/deb.debian.org/mirrors.tencent.com/g' /etc/apt/sources.list.d/debian.sources && \
+    sed -i 's/security.debian.org/mirrors.tencent.com/g' /etc/apt/sources.list.d/debian.sources
+
 RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     curl \
@@ -14,8 +17,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 COPY . /app
 
-RUN python -m pip install --upgrade pip setuptools wheel \
-    && pip install .
+RUN python -m pip install --upgrade pip setuptools wheel -i https://pypi.tuna.tsinghua.edu.cn/simple && \
+    pip install . -i https://pypi.tuna.tsinghua.edu.cn/simple
 
 EXPOSE 3000
 
