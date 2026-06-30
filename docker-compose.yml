@@ -1,65 +1,16 @@
-x-common-env: &common-env
-  TZ: Europe/Rome
-  OR_SITE_URL: https://github.com/flankerLym/KageClaw
-  OR_APP_NAME: kageClaw
-  # kageCLAW_DEBUG: "true"  # Uncomment to enable debug logging
-
-x-common-config: &common-config
-  image: rikyz90/kageclaw:latest
-  deploy:
-    resources:
-      limits:
-        cpus: "0.5"
-        memory: 256M
-      reservations:
-        cpus: "0.2"
-        memory: 128M
-  environment:
-    <<: *common-env
-  volumes:
-    - ./.kageclaw:/root/.kageclaw # app data & main config
-    - ./.kageclaw/.config:/root/.config # XDG user config dir
-    - ./.kageclaw/.local:/root/.local # user-level installs (pip, pipx...)
-    - ./.kageclaw/.cache:/root/.cache # package/build cache
-    - ./.kageclaw/tools:/opt/tools # custom tools installed at runtime
-    - ./.kageclaw/bin:/usr/local/bin # persist globally installed executables (git, gh)
-    - ./.kageclaw/.gitconfig:/root/.gitconfig # persist user git config (optional)
 services:
-  kageclaw-gateway:
-    container_name: kageclaw-gateway
-    <<: *common-config
-    deploy:
-      resources:
-        limits:
-          cpus: "0.5"
-          memory: 512M
-        reservations:
-          cpus: "0.2"
-          memory: 256M
-    command: [ "kageclaw", "gateway", "--host", "0.0.0.0" ]
+  kageclaw:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: kageclaw:latest
+    container_name: kageclaw
     restart: unless-stopped
     ports:
-      - "127.0.0.1:19999:19999"
-      - "127.0.0.1:19998:19998"
-
-  kageclaw-cli:
-    container_name: kageclaw-cli
-    <<: *common-config
-    profiles:
-      - cli
-    command: [ "kageclaw", "status" ]
-    stdin_open: true
-    tty: true
-
-  kageclaw-web:
-    container_name: kageclaw-web
-    <<: *common-config
-    command: [ "kageclaw", "web", "--host", "0.0.0.0", "--port", "3000" ]
-    restart: unless-stopped
-    depends_on:
-      - kageclaw-gateway
+      - "3000:3000"
     environment:
-      <<: *common-env
-      kageCLAW_CORS_ORIGINS: "*"
-    ports:
-      - "127.0.0.1:3000:3000"
+      TZ: Asia/Shanghai
+      KAGECLAW_CORS_ORIGINS: "*"
+    volumes:
+      - ./.kageclaw:/root/.kageclaw
+      - ./.kageclaw/workspace:/workspace
