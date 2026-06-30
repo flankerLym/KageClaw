@@ -52,7 +52,7 @@ def test_runtime_metadata_exposes_detection_fields(tmp_path, monkeypatch):
     monkeypatch.setattr(detector, "get_runtime_root_path", lambda: tmp_path)
     monkeypatch.setattr(detector, "get_current_version", lambda: "0.3.7")
     monkeypatch.setattr(detector, "get_installation_method", lambda: "source")
-    monkeypatch.setattr(detector, "get_git_remote_url", lambda root=None: "https://github.com/RikyZ90/KAGECLAW.git")
+    monkeypatch.setattr(detector, "get_git_remote_url", lambda root=None: "https://github.com/flankerLym/KageClaw.git")
     monkeypatch.setattr(detector, "is_running_as_exe", lambda: False)
 
     metadata = detector.get_runtime_metadata()

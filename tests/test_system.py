@@ -1,4 +1,4 @@
-"""Tests for shibaclaw.helpers.system — OS abstraction layer."""
+"""Tests for kageclaw.helpers.system — OS abstraction layer."""
 
 from __future__ import annotations
 
@@ -21,7 +21,7 @@ import pytest
     ],
 )
 def test_get_os_type(platform_system: str, expected: str) -> None:
-    from shibaclaw.helpers.system import get_os_type
+    from kageclaw.helpers.system import get_os_type
 
     with mock.patch("platform.system", return_value=platform_system):
         assert get_os_type() == expected
@@ -32,7 +32,7 @@ def test_get_os_type(platform_system: str, expected: str) -> None:
 # ---------------------------------------------------------------------------
 
 def test_is_running_in_docker_via_dockerenv(tmp_path) -> None:
-    from shibaclaw.helpers.system import is_running_in_docker
+    from kageclaw.helpers.system import is_running_in_docker
 
     dockerenv = tmp_path / ".dockerenv"
     dockerenv.touch()
@@ -43,7 +43,7 @@ def test_is_running_in_docker_via_dockerenv(tmp_path) -> None:
 
 
 def test_is_running_in_docker_via_env_var() -> None:
-    from shibaclaw.helpers.system import is_running_in_docker
+    from kageclaw.helpers.system import is_running_in_docker
 
     with mock.patch("os.path.exists", return_value=False):
         with mock.patch.dict("os.environ", {"DOCKER_CONTAINER": "1"}, clear=False):
@@ -51,7 +51,7 @@ def test_is_running_in_docker_via_env_var() -> None:
 
 
 def test_is_running_in_docker_false() -> None:
-    from shibaclaw.helpers.system import is_running_in_docker
+    from kageclaw.helpers.system import is_running_in_docker
 
     with mock.patch("os.path.exists", return_value=False):
         with mock.patch.dict("os.environ", {}, clear=True):
@@ -64,7 +64,7 @@ def test_is_running_in_docker_false() -> None:
 # ---------------------------------------------------------------------------
 
 def test_is_running_in_pip_env_venv(monkeypatch) -> None:
-    from shibaclaw.helpers import system
+    from kageclaw.helpers import system
 
     monkeypatch.setattr(system.sys, "prefix", "/some/venv")
     monkeypatch.setattr(system.sys, "base_prefix", "/usr")
@@ -77,7 +77,7 @@ def test_is_running_in_pip_env_venv(monkeypatch) -> None:
 
 
 def test_is_running_in_pip_env_no_venv(monkeypatch) -> None:
-    from shibaclaw.helpers import system
+    from kageclaw.helpers import system
 
     monkeypatch.setattr(system.sys, "prefix", "/usr")
     monkeypatch.setattr(system.sys, "base_prefix", "/usr")
@@ -88,7 +88,7 @@ def test_is_running_in_pip_env_no_venv(monkeypatch) -> None:
 
 
 def test_is_running_in_pip_env_legacy_virtualenv(monkeypatch) -> None:
-    from shibaclaw.helpers import system
+    from kageclaw.helpers import system
 
     monkeypatch.setattr(system.sys, "prefix", "/usr")
     monkeypatch.setattr(system.sys, "base_prefix", "/usr")
@@ -102,7 +102,7 @@ def test_is_running_in_pip_env_legacy_virtualenv(monkeypatch) -> None:
 # ---------------------------------------------------------------------------
 
 def test_is_tcp_port_available_false_when_port_is_bound() -> None:
-    from shibaclaw.helpers.system import is_tcp_port_available
+    from kageclaw.helpers.system import is_tcp_port_available
 
     with socket(AF_INET, SOCK_STREAM) as sock:
         sock.bind(("127.0.0.1", 0))
@@ -111,7 +111,7 @@ def test_is_tcp_port_available_false_when_port_is_bound() -> None:
 
 
 def test_find_free_tcp_port_skips_excluded_port() -> None:
-    from shibaclaw.helpers.system import find_free_tcp_port
+    from kageclaw.helpers.system import find_free_tcp_port
 
     excluded = find_free_tcp_port("127.0.0.1")
     selected = find_free_tcp_port("127.0.0.1", exclude={excluded})
@@ -124,13 +124,13 @@ def test_find_free_tcp_port_skips_excluded_port() -> None:
 
 @pytest.mark.asyncio
 async def test_execute_command_linux_echo() -> None:
-    from shibaclaw.helpers.system import execute_command
+    from kageclaw.helpers.system import execute_command
 
     mock_proc = mock.AsyncMock()
     mock_proc.communicate = mock.AsyncMock(return_value=(b"hello\n", b""))
     mock_proc.returncode = 0
 
-    with mock.patch("shibaclaw.helpers.system.get_os_type", return_value="linux"):
+    with mock.patch("kageclaw.helpers.system.get_os_type", return_value="linux"):
         with mock.patch("asyncio.create_subprocess_exec", return_value=mock_proc) as mock_exec:
             rc, stdout, stderr = await execute_command("echo hello")
 
@@ -144,14 +144,14 @@ async def test_execute_command_linux_echo() -> None:
 
 @pytest.mark.asyncio
 async def test_execute_command_windows_echo() -> None:
-    from shibaclaw.helpers.system import execute_command
+    from kageclaw.helpers.system import execute_command
 
     # Only meaningful on actual Windows; on Linux we mock create_subprocess_exec
     mock_proc = mock.AsyncMock()
     mock_proc.communicate = mock.AsyncMock(return_value=(b"hello\r\n", b""))
     mock_proc.returncode = 0
 
-    with mock.patch("shibaclaw.helpers.system.get_os_type", return_value="windows"):
+    with mock.patch("kageclaw.helpers.system.get_os_type", return_value="windows"):
         with mock.patch("asyncio.create_subprocess_exec", return_value=mock_proc) as mock_exec:
             rc, stdout, stderr = await execute_command("echo hello")
 
@@ -167,7 +167,7 @@ async def test_execute_command_windows_echo() -> None:
 async def test_execute_command_timeout() -> None:
     import asyncio
 
-    from shibaclaw.helpers.system import execute_command
+    from kageclaw.helpers.system import execute_command
 
     async def _slow_communicate():
         await asyncio.sleep(999)
@@ -179,7 +179,7 @@ async def test_execute_command_timeout() -> None:
     mock_proc.kill = mock.MagicMock()
     mock_proc.wait = mock.AsyncMock()
 
-    with mock.patch("shibaclaw.helpers.system.get_os_type", return_value="linux"):
+    with mock.patch("kageclaw.helpers.system.get_os_type", return_value="linux"):
         with mock.patch("asyncio.create_subprocess_exec", return_value=mock_proc):
             rc, stdout, stderr = await execute_command("sleep 999", timeout=0.05)
 
@@ -193,44 +193,44 @@ async def test_execute_command_timeout() -> None:
 
 def test_skills_os_gating_windows(tmp_path) -> None:
     """Skills with os=['windows'] must be available only on Windows."""
-    from shibaclaw.agent.skills import SkillsLoader
+    from kageclaw.agent.skills import SkillsLoader
 
     # Create a fake skill restricted to Windows
     skill_dir = tmp_path / "win-only"
     skill_dir.mkdir()
     (skill_dir / "SKILL.md").write_text(
         '---\nname: win-only\ndescription: Windows only\n'
-        'metadata: {"shibaclaw":{"os":["windows"]}}\n---\n# Win only\n'
+        'metadata: {"kageclaw":{"os":["windows"]}}\n---\n# Win only\n'
     )
 
     loader = SkillsLoader(workspace=tmp_path, builtin_skills_dir=tmp_path)
 
-    with mock.patch("shibaclaw.agent.skills.platform.system", return_value="Windows"):
+    with mock.patch("kageclaw.agent.skills.platform.system", return_value="Windows"):
         available = {s["name"] for s in loader.list_skills(filter_unavailable=True)}
         assert "win-only" in available
 
-    with mock.patch("shibaclaw.agent.skills.platform.system", return_value="Linux"):
+    with mock.patch("kageclaw.agent.skills.platform.system", return_value="Linux"):
         available = {s["name"] for s in loader.list_skills(filter_unavailable=True)}
         assert "win-only" not in available
 
 
 def test_skills_os_gating_linux(tmp_path) -> None:
     """Skills with os=['darwin','linux'] must be excluded on Windows."""
-    from shibaclaw.agent.skills import SkillsLoader
+    from kageclaw.agent.skills import SkillsLoader
 
     skill_dir = tmp_path / "posix-only"
     skill_dir.mkdir()
     (skill_dir / "SKILL.md").write_text(
         '---\nname: posix-only\ndescription: POSIX only\n'
-        'metadata: {"shibaclaw":{"os":["darwin","linux"]}}\n---\n# POSIX only\n'
+        'metadata: {"kageclaw":{"os":["darwin","linux"]}}\n---\n# POSIX only\n'
     )
 
     loader = SkillsLoader(workspace=tmp_path, builtin_skills_dir=tmp_path)
 
-    with mock.patch("shibaclaw.agent.skills.platform.system", return_value="Windows"):
+    with mock.patch("kageclaw.agent.skills.platform.system", return_value="Windows"):
         available = {s["name"] for s in loader.list_skills(filter_unavailable=True)}
         assert "posix-only" not in available
 
-    with mock.patch("shibaclaw.agent.skills.platform.system", return_value="Linux"):
+    with mock.patch("kageclaw.agent.skills.platform.system", return_value="Linux"):
         available = {s["name"] for s in loader.list_skills(filter_unavailable=True)}
         assert "posix-only" in available

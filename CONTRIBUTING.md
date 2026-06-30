@@ -1,10 +1,10 @@
-# 🐾 Contributing to ShibaClaw
+# 🐾 Contributing to kageClaw
 
 First off — thanks for taking the time to contribute! Every paw print counts 🐕
 
 ## 🧭 Where to Start
 
-- Check open [Issues](https://github.com/RikyZ90/ShibaClaw/issues) for bugs or feature requests
+- Check open [Issues](https://github.com/flankerLym/KageClaw/issues) for bugs or feature requests
 - Look for issues tagged `good first issue` if you're new to the project
 - Feel free to open a new issue before starting work on big changes
 
@@ -16,8 +16,8 @@ First off — thanks for taking the time to contribute! Every paw print counts �
 
 ### Local install
 ```bash
-git clone https://github.com/RikyZ90/ShibaClaw.git
-cd ShibaClaw
+git clone https://github.com/flankerLym/KageClaw.git
+cd kageClaw
 pip install -e ".[dev]"
 ```
 
@@ -40,8 +40,8 @@ pytest tests/
 - Write clear commit messages (e.g. `feat: add discord skill`, `fix: thinker timeout`)
 
 ## 🧩 Adding a New Skill
-Skills live in `shibaclaw/skills/`. To add one:
-- Create a new file in `shibaclaw/skills/`
+Skills live in `kageclaw/skills/`. To add one:
+- Create a new file in `kageclaw/skills/`
 - Implement the skill following the existing patterns
 - Register it in the Skills Registry
 

@@ -3,10 +3,10 @@ from unittest.mock import patch
 import pytest
 from starlette.testclient import TestClient
 
-from shibaclaw.config.schema import Config
-from shibaclaw.helpers.notification_manager import notification_manager
-from shibaclaw.webui.agent_manager import agent_manager
-from shibaclaw.webui.server import create_app
+from kageclaw.config.schema import Config
+from kageclaw.helpers.notification_manager import notification_manager
+from kageclaw.webui.agent_manager import agent_manager
+from kageclaw.webui.server import create_app
 
 
 @pytest.fixture
@@ -18,7 +18,7 @@ def mock_config(tmp_path):
     class DummyProvider:
         pass
 
-    with patch("shibaclaw.webui.auth._auth_enabled", return_value=False):
+    with patch("kageclaw.webui.auth._auth_enabled", return_value=False):
         yield config, DummyProvider()
 
 
@@ -138,11 +138,11 @@ def test_api_update_check_returns_normalized_payload(client):
         "update_available": True,
         "action_kind": "automatic",
         "action_label": "Update now",
-        "action_command": "pip install --upgrade shibaclaw",
-        "action_url": "https://github.com/RikyZ90/ShibaClaw/releases/tag/v0.3.8",
-        "release_url": "https://github.com/RikyZ90/ShibaClaw/releases/tag/v0.3.8",
+        "action_command": "pip install --upgrade kageclaw",
+        "action_url": "https://github.com/flankerLym/KageClaw/releases/tag/v0.3.8",
+        "release_url": "https://github.com/flankerLym/KageClaw/releases/tag/v0.3.8",
         "download_url": None,
-        "manifest_url": "https://github.com/RikyZ90/ShibaClaw/releases/download/v0.3.8/update_manifest.json",
+        "manifest_url": "https://github.com/flankerLym/KageClaw/releases/download/v0.3.8/update_manifest.json",
         "notification": {"category": "update", "text": "update available"},
         "checked_at": 123,
         "error": None,
@@ -151,7 +151,7 @@ def test_api_update_check_returns_normalized_payload(client):
         "notes": [],
     }
 
-    with patch("shibaclaw.updater.checker.check_for_update", return_value=payload):
+    with patch("kageclaw.updater.checker.check_for_update", return_value=payload):
         response = client.get("/api/update/check")
 
     assert response.status_code == 200
@@ -169,14 +169,14 @@ def test_api_update_apply_returns_manual_report_without_restart(client):
         "restarting": False,
         "action_kind": "manual-command",
         "action_label": "Pull latest image",
-        "action_command": "docker pull rikyz90/shibaclaw:latest",
-        "action_url": "https://github.com/RikyZ90/ShibaClaw/releases/tag/v0.3.8",
+        "action_command": "docker pull rikyz90/kageclaw:latest",
+        "action_url": "https://github.com/flankerLym/KageClaw/releases/tag/v0.3.8",
         "message": "Manual update required.",
         "backup": {"moved": [], "skipped": []},
         "pip": None,
     }
 
-    with patch("shibaclaw.updater.apply.apply_update", return_value=report):
+    with patch("kageclaw.updater.apply.apply_update", return_value=report):
         response = client.post(
             "/api/update/apply",
             json={"update": {"install_method": "docker", "action_kind": "manual-command"}},

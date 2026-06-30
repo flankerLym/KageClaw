@@ -1,4 +1,4 @@
-/**
+﻿/**
  * WhatsApp client wrapper using Baileys.
  * Based on OpenClaw's working implementation.
  */
@@ -64,7 +64,7 @@ export class WhatsAppClient {
       version,
       logger,
       printQRInTerminal: false,
-      browser: ['shibaclaw', 'cli', VERSION],
+      browser: ['kageclaw', 'cli', VERSION],
       syncFullHistory: false,
       markOnlineOnConnect: false,
       shouldSyncHistoryMessage: () => false,

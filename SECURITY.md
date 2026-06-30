@@ -1,4 +1,4 @@
-# Security Policy
+﻿# Security Policy
 
 ## Supported Versions
 
@@ -9,12 +9,12 @@
 
 ## Reporting a Vulnerability
 
-If you discover a security vulnerability in ShibaClaw, **please report it responsibly**.
+If you discover a security vulnerability in kageClaw, **please report it responsibly**.
 
 ### How to Report
 
-1. **Email**: Send details to **security@shibaclaw.dev** (or open a private advisory on GitHub).
-2. **GitHub Security Advisories**: Use the [Report a Vulnerability](https://github.com/RikyZ90/ShibaClaw/security/advisories/new) form on this repository.
+1. **Email**: Send details to **security@kageclaw.dev** (or open a private advisory on GitHub).
+2. **GitHub Security Advisories**: Use the [Report a Vulnerability](https://github.com/flankerLym/KageClaw/security/advisories/new) form on this repository.
 
 **Do NOT** open a public issue for security vulnerabilities.
 
@@ -33,7 +33,7 @@ If you discover a security vulnerability in ShibaClaw, **please report it respon
 
 ## Security Architecture
 
-ShibaClaw implements defense-in-depth across multiple layers:
+kageClaw implements defense-in-depth across multiple layers:
 
 ### Agent Execution
 

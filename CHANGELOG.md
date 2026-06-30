@@ -1,7 +1,7 @@
 ## [0.7.5] - 2026-06-27
 
 ### Changed
-- **WhatsApp Integration** — Decoupled the WhatsApp channel from the core framework and moved it to a separate, installable plugin (`shibaclaw-channel-whatsapp`) to reduce core dependencies and allow independent updates.
+- **WhatsApp Integration** — Decoupled the WhatsApp channel from the core framework and moved it to a separate, installable plugin (`kageclaw-channel-whatsapp`) to reduce core dependencies and allow independent updates.
 
 ## [0.7.4] - 2026-06-23
 
@@ -27,7 +27,7 @@
 
 ### Fixed
 - **Windows EXE Automatic Updates** — Transitioned `apply.py` to execute the official `install.ps1` installer in a detached background process for EXE updates, rather than manually extracting zip files and writing batch files.
-- **Windows Process Lock Handling** — Handled locked executables in `install.ps1` by checking and waiting up to 30 seconds for any running `ShibaClaw` processes to exit, force-terminating them as a fallback.
+- **Windows Process Lock Handling** — Handled locked executables in `install.ps1` by checking and waiting up to 30 seconds for any running `kageClaw` processes to exit, force-terminating them as a fallback.
 - **Plugin Installation on Packaged EXE** — Prevented dynamic pip-based plugin installations and uninstallations in `plugins.py` when running from a packaged EXE, returning a clean error instead of failing.
 - **Duplicate Desktop GUI Spawns** — Configured `__main__.py` to block launching python modules (e.g. `-m pip`) when compiled by PyInstaller, printing a stderr message and exiting instead of spawning duplicate GUI windows.
 - **Desktop pywebview Freeze on Gateway Restart** — Resolved window freeze on plugin install/uninstall by waiting for the gateway to report a fully ready `"ok"` status before reloading the page, retrying configured port binding to prevent falling back to random ports, and thread-safely reconnecting the WebSocket gateway client.
@@ -41,7 +41,7 @@
 - **Plugin Installation Fallback** — Resolved local plugin path installation issues by resolving package names to absolute directory paths locally, and added a fallback to official GitHub repository subdirectories for remote users who don't have a local checkout.
 
 ### Added
-- **Plugin Development Guide** — Added a comprehensive plugin development guide explaining how to develop both custom Channels and TTS engines for ShibaClaw, and linked it in the README.
+- **Plugin Development Guide** — Added a comprehensive plugin development guide explaining how to develop both custom Channels and TTS engines for kageClaw, and linked it in the README.
 
 ## [0.7.0] - 2026-06-21
 
@@ -60,7 +60,7 @@
 
 ### Changed
 - **Settings Menu Redesign & Premium UX** — Transformed the Settings interface into a dedicated, clean full-screen layout with vertical sidebar navigation, cohesive tab panels, and a mobile-optimized category dashboard.
-- **Uninstaller Relocation & Lock-Free Execution** — Relocated `uninstall.ps1` from the `.shibaclaw` root to the `app\ShibaClaw\` directory next to `ShibaClaw.exe` to keep the root directory clean. The uninstaller now copies itself to the Windows `Temp` directory and delegates execution to that copy, allowing clean deletion of the `app` folder while preserving user files in the `.shibaclaw` root.
+- **Uninstaller Relocation & Lock-Free Execution** — Relocated `uninstall.ps1` from the `.kageclaw` root to the `app\kageClaw\` directory next to `kageClaw.exe` to keep the root directory clean. The uninstaller now copies itself to the Windows `Temp` directory and delegates execution to that copy, allowing clean deletion of the `app` folder while preserving user files in the `.kageclaw` root.
 
 ### Added
 - **Automated Test Coverage** — Implemented a comprehensive suite of non-regression test cases verifying the bounded cache limits, the multi-tab websocket queueing, HTTP status parsing accuracy, and connection pool reuse.
@@ -68,9 +68,9 @@
 ## [0.6.6] - 2026-06-20
 
 ### Fixed
-- **Native Windows Taskbar Icon** — Fixed an issue where the packaged Windows `.exe` displayed the generic Python icon in the taskbar instead of the ShibaClaw icon. The application now correctly bypasses explicitly setting `AppUserModelID` when running as a frozen executable to naturally group tasks and use the embedded `.exe` icon, and the `.NET` fallback dependencies (`clr`, `pythonnet`) have been explicitly added to the PyInstaller build to ensure pywebview host windows render the icon properly.
+- **Native Windows Taskbar Icon** — Fixed an issue where the packaged Windows `.exe` displayed the generic Python icon in the taskbar instead of the kageClaw icon. The application now correctly bypasses explicitly setting `AppUserModelID` when running as a frozen executable to naturally group tasks and use the embedded `.exe` icon, and the `.NET` fallback dependencies (`clr`, `pythonnet`) have been explicitly added to the PyInstaller build to ensure pywebview host windows render the icon properly.
 - **WebUI Update Progress Timeout** — Handled network errors and timeouts during long update operations (like pip dependencies installation) by showing an "Update in Progress" background state instead of a hard failure in the UI.
-- **Windows EXE Update Installer Detection** — Fixed a bug where custom-packaged `ShibaClaw.exe` launchers were incorrectly identified as `pip` installations due to missing `sys.frozen` markers, which caused updates to restart only the gateway instead of triggering the native `.exe` self-replacing updater and shutting down the main app.
+- **Windows EXE Update Installer Detection** — Fixed a bug where custom-packaged `kageClaw.exe` launchers were incorrectly identified as `pip` installations due to missing `sys.frozen` markers, which caused updates to restart only the gateway instead of triggering the native `.exe` self-replacing updater and shutting down the main app.
 
 ## [0.6.4] - 2026-06-16
 
@@ -110,7 +110,7 @@
 ## [0.5.8] - 2026-06-02
 
 ### Fixed
-- **Windows CMD/PowerShell Window** — Fixed an issue where the background gateway console window remained open when launching ShibaClaw via the desktop shortcut by running the subprocess with `CREATE_NO_WINDOW`.
+- **Windows CMD/PowerShell Window** — Fixed an issue where the background gateway console window remained open when launching kageClaw via the desktop shortcut by running the subprocess with `CREATE_NO_WINDOW`.
 - **Native Windows Taskbar Icon** — Fixed a bug where the custom application icon was missing in the Windows taskbar for the desktop pywebview UI by explicitly setting the window icon when the page is fully loaded.
 - **WebUI Pip Update Process & Spinner** — Fixed false-positive update timeout errors during slow pip installations by increasing the command timeout to 600 seconds and implementing an indeterminate progress spinner/loading bar to indicate background progress.
 
@@ -118,10 +118,10 @@
 
 ### Fixed
 - **Windows Install Icons** — Fixed an issue where the native Windows desktop and tray icons were missing during fresh installations by packaging the `assets` folder directly into the pip wheel and downloading the shortcut icon dynamically in the install script.
-- **Install Logs UI** — Resolved encoding issues in the PowerShell installation script (`????`) and replaced generic logging emojis with a custom, Shiba-themed progress logging experience.
+- **Install Logs UI** — Resolved encoding issues in the PowerShell installation script (`????`) and replaced generic logging emojis with a custom, kage-themed progress logging experience.
 
 ## [0.5.6] - 2026-06-02### Added
-- **New One-Line Script Installers** — Introduced new automated installer scripts (`install.ps1` for Windows, `install.sh` for macOS/Linux) that set up ShibaClaw in a clean virtual environment using pip/pipx, with support for automatically creating desktop and start menu shortcuts.
+- **New One-Line Script Installers** — Introduced new automated installer scripts (`install.ps1` for Windows, `install.sh` for macOS/Linux) that set up kageClaw in a clean virtual environment using pip/pipx, with support for automatically creating desktop and start menu shortcuts.
 - **Pip Update Cache Invalidation** — Added direct cache invalidation inside the updater after a successful pip/pipx upgrade to ensure the UI immediately reflects the update.
 
 ### Fixed
@@ -145,7 +145,7 @@
 - **Session Persistence** — Optimized session saving in `brain/manager.py` to use append-only writes for messages, avoiding full-file rewrites.
 
 ### Removed
-- **Obsolete Code** — Deleted `shibaclaw/webui/socket_io.py` as it was superseded by the new WebSocket architecture.
+- **Obsolete Code** — Deleted `kageclaw/webui/socket_io.py` as it was superseded by the new WebSocket architecture.
 
 ## [0.5.4] - 2026-05-30
 
@@ -224,7 +224,7 @@
 
 
 ### Added
-- **Windows Auto-Start** — Added a "Run on Startup" option to the Windows System Tray menu. When enabled, ShibaClaw automatically launches when Windows boots up.
+- **Windows Auto-Start** — Added a "Run on Startup" option to the Windows System Tray menu. When enabled, kageClaw automatically launches when Windows boots up.
 - **GitHub Star Popup** — Added an elegant, non-intrusive popup in the WebUI to encourage users to star the repository. The popup appears after a smart 45-second delay and permanently dismisses itself via `localStorage` once interacted with.
     
 ### Fixed
@@ -236,8 +236,8 @@
 - **Thought Streaming UX** — Overhauled the model reasoning display in the WebUI. `<think>` blocks are now rendered as native, fluid `<details>` (accordion) components with glassmorphism styling and "Reasoning in progress" indicators, eliminating layout shifts during streaming.
 - **Native Reasoning Support** — Added unified UI support for models that return native reasoning fields (like Gemini 2.0 Thinking or DeepSeek API) instead of raw `<think>` text blocks, ensuring all agent thoughts are rendered with the same beautiful accordion UX.
 - **Thought Persistence** — Modified the agent loop and context management to preserve full reasoning history in the database. Reasoning blocks are now correctly recovered and displayed when refreshing the page or switching sessions.
-- **Desktop Text Selection** — Enabled native text selection in the desktop WebView window (`ShibaClaw.exe`), allowing users to select and copy chat content.
-- **Windows Automatic Updates** — Implemented and hardened the automatic self-replacing update system for Windows executables (`ShibaClaw.exe`), including seamless process hand-off and UAC elevation handling.
+- **Desktop Text Selection** — Enabled native text selection in the desktop WebView window (`kageClaw.exe`), allowing users to select and copy chat content.
+- **Windows Automatic Updates** — Implemented and hardened the automatic self-replacing update system for Windows executables (`kageClaw.exe`), including seamless process hand-off and UAC elevation handling.
 - **Update Progress UI** — Integrated a dynamic progress bar into the WebUI update modal, featuring real-time WebSocket progress reporting for instant user feedback during downloads and extraction.
 
 ### Fixed
@@ -269,13 +269,13 @@
 - **Version Resolution Regression Tests** — Added `tests/test_version_resolution.py` with three parametrized tests covering the frozen (EXE), source-checkout, and pip/docker version resolution branches.
 
 ### Fixed
-- **Environment-Aware Version Resolution** — `shibaclaw/__init__.py` `_get_version()` now selects the appropriate source depending on runtime context:
+- **Environment-Aware Version Resolution** — `kageclaw/__init__.py` `_get_version()` now selects the appropriate source depending on runtime context:
   - **Frozen (PyInstaller EXE):** bundled `update_manifest.json` → installed metadata → `"dev"`
   - **Source checkout:** `pyproject.toml` → installed metadata → bundled manifest → `"dev"`
   - **Pip / Docker install:** installed metadata → bundled manifest → `pyproject.toml` → `"dev"`
   Previously all environments shared the same chain, causing pip/docker installs to read a stale internal manifest instead of the installed package metadata.
 - **Hardcoded Version Fallback Removed** — The changelog UI (`ui_panels.js`) was falling back to `"0.3.6"` when no version was resolved at startup. Replaced with a `hasResolvedVersion` guard and a `/releases/latest` redirect so users always see the correct information.
-- **Release Workflow Manifest Path** — The GitHub Actions publish job now attaches the repo-root `update_manifest.json` to releases instead of the internal `shibaclaw/updater/update_manifest.json` copy.
+- **Release Workflow Manifest Path** — The GitHub Actions publish job now attaches the repo-root `update_manifest.json` to releases instead of the internal `kageclaw/updater/update_manifest.json` copy.
 
 ## [0.3.8] - 2026-05-13
 
@@ -360,7 +360,7 @@
 
 ### Added
 - **Release Automation** — Added documentation and helpers for managing GitHub releases.
-- **Native Windows Desktop Launcher** — Added a seamless pywebview-based Windows desktop client (`ShibaClaw.exe`) featuring a system tray icon, window state management, and bundled assets.
+- **Native Windows Desktop Launcher** — Added a seamless pywebview-based Windows desktop client (`kageClaw.exe`) featuring a system tray icon, window state management, and bundled assets.
 
 ### Changed
 - **Desktop WebUI Authentication** — Disabled authentication by default for the native Desktop launcher to improve the out-of-the-box local experience.
@@ -471,11 +471,11 @@
 ## [0.1.4] - 2026-04-24
 
 ### Fixed
-- **`AttributeError: 'list' object has no attribute 'strip'`** — Memory consolidation crashed during `maybe_proactive_learn()` when messages contained multi-part content (OpenAI-style `[{"type": "text", "text": "..."}]` format). Added `_normalize_content()` to `ScentKeeper._format_messages()` to handle `str`, `list`, and `None` content uniformly. *(Thanks [@itskun](https://github.com/itskun) for the report! — [#18](https://github.com/RikyZ90/ShibaClaw/issues/18))*
-- **Channel Status missing configured channels** — `shibaclaw channels status` silently omitted any channel whose optional dependency was not installed (e.g. Telegram without `python-telegram-bot`). Channels with unresolvable imports now appear in the table with a `! missing dep` indicator, making misconfigured setups immediately visible.
+- **`AttributeError: 'list' object has no attribute 'strip'`** — Memory consolidation crashed during `maybe_proactive_learn()` when messages contained multi-part content (OpenAI-style `[{"type": "text", "text": "..."}]` format). Added `_normalize_content()` to `ScentKeeper._format_messages()` to handle `str`, `list`, and `None` content uniformly. *(Thanks [@itskun](https://github.com/itskun) for the report! — [#18](https://github.com/flankerLym/KageClaw/issues/18))*
+- **Channel Status missing configured channels** — `kageclaw channels status` silently omitted any channel whose optional dependency was not installed (e.g. Telegram without `python-telegram-bot`). Channels with unresolvable imports now appear in the table with a `! missing dep` indicator, making misconfigured setups immediately visible.
 
 ### Added
-- **`SHIBACLAW_DEBUG` env var** — Set `SHIBACLAW_DEBUG=true` (or `1`/`yes`/`on`) to force `DEBUG` log level with full backtraces and source-file annotations, without needing the `--verbose` flag. Useful for Docker deployments. The variable is documented in `docker-compose.yml` as a commented-out example.
+- **`kageCLAW_DEBUG` env var** — Set `kageCLAW_DEBUG=true` (or `1`/`yes`/`on`) to force `DEBUG` log level with full backtraces and source-file annotations, without needing the `--verbose` flag. Useful for Docker deployments. The variable is documented in `docker-compose.yml` as a commented-out example.
 
 ## [0.1.3] - 2026-04-19
 
@@ -497,12 +497,12 @@
 - **Gateway health check noise while processing**: `checkGatewayHealth()` in the frontend now skips entirely when `state.processing` is true, preventing unnecessary timeout errors and false "Gateway Down" status while the agent is working.
 
 ### Changed
-- **`_CHAT_TIMEOUT` increased** from 120 s to 1800 s in `shibaclaw/thinkers/base.py` to accommodate complex multi-step reasoning tasks.
+- **`_CHAT_TIMEOUT` increased** from 120 s to 1800 s in `kageclaw/thinkers/base.py` to accommodate complex multi-step reasoning tasks.
 
 ## [0.1.1] - 2026-04-19
 
 ### Fixed
-- **Hotfix**: Fixed an `ImportError` on CLI startup (`setup_shiba_logging` missing from `shibaclaw/cli/utils.py`) caused by aggressive autolinting.
+- **Hotfix**: Fixed an `ImportError` on CLI startup (`setup_kage_logging` missing from `kageclaw/cli/utils.py`) caused by aggressive autolinting.
 
 ## [0.1.0] - 2026-04-19
 
@@ -563,22 +563,22 @@
 ## [0.0.36] - 2026-04-16
 
 ### Fixed
-- **`web --with-gateway` host routing** — Bare-metal launches now force the spawned gateway onto local loopback and export the correct internal WebUI URL, fixing `Gateway unreachable: [Errno -2] Name or service not known` when the saved config still pointed to the Docker hostname `shibaclaw-gateway` or when the WebUI used a custom port.
+- **`web --with-gateway` host routing** — Bare-metal launches now force the spawned gateway onto local loopback and export the correct internal WebUI URL, fixing `Gateway unreachable: [Errno -2] Name or service not known` when the saved config still pointed to the Docker hostname `kageclaw-gateway` or when the WebUI used a custom port.
 - **File Explorer modal UX** — The Files popup now scrolls correctly on tall directories and no longer closes when clicking outside the dialog.
 - **Cron store reload noise** — Reload bookkeeping now refreshes the saved mtime after a successful `jobs.json` load, preventing repeated external-reload logs for the same file and downgrading the message to debug.
 
 ### Changed
-- **Release metadata & docs** — README, deploy guide, Docker memory guidance, and update metadata now reflect the thin WebUI architecture and the recommended `shibaclaw web --with-gateway` flow.
+- **Release metadata & docs** — README, deploy guide, Docker memory guidance, and update metadata now reflect the thin WebUI architecture and the recommended `kageclaw web --with-gateway` flow.
 
 ## [0.0.35] - 2026-04-16
 
 ### Added
-- **Distributed Architecture (WebUI Proxying)** — Integrated a thin-client architecture for the WebUI. The `shibaclaw-web` process no longer instantiates the LLM, memory, or background consumers. It delegates all processing via a new internal streaming API on the `shibaclaw-gateway`.
+- **Distributed Architecture (WebUI Proxying)** — Integrated a thin-client architecture for the WebUI. The `kageclaw-web` process no longer instantiates the LLM, memory, or background consumers. It delegates all processing via a new internal streaming API on the `kageclaw-gateway`.
 - **NDJSON Streaming API** — The gateway now supports streaming agent progress and tool execution status via HTTP, allowing remote UI clients to maintain real-time interactivity.
 - **Heartbeat & Cron Delegation** — Automated tasks are now unified and run strictly in the gateway process, even when triggered from the WebUI.
 
 ### Fixed
-- **Massive RAM usage reduction** — Eliminated duplication of the entire agent core between processes. `shibaclaw-web` memory footprint dropped by nearly 90% (no longer loads heavy ML models or provider libraries internally).
+- **Massive RAM usage reduction** — Eliminated duplication of the entire agent core between processes. `kageclaw-web` memory footprint dropped by nearly 90% (no longer loads heavy ML models or provider libraries internally).
 - **Service dependencies** — Added `depends_on` in `docker-compose` to ensure the gateway is available before the UI attempts to proxy requests.
 
 ## [0.0.31] - 2026-04-14
@@ -624,7 +624,7 @@
 ### Added
 - **Agent Profiles — Per-Session Personas**
     - Switch the agent's personality on-the-fly via a dropdown in the chat header.
-    - 5 built-in profiles: **Default** (original ShibaClaw), **Builder** (code-first, minimal chatter), **Planner** (strategic thinking, breaks down problems), **Reviewer** (critical eye, finds issues), **Hacker** (elite security expert).
+    - 5 built-in profiles: **Default** (original kageClaw), **Builder** (code-first, minimal chatter), **Planner** (strategic thinking, breaks down problems), **Reviewer** (critical eye, finds issues), **Hacker** (elite security expert).
     - Each profile overrides the agent's SOUL.md prompt — model, provider, and memory stay shared.
     - Profile selection is **per-session**: different sessions can use different personas simultaneously.
     - Profiles are stored as simple `profiles/<id>/SOUL.md` folders in the workspace — easy to read, edit, and version.
@@ -634,14 +634,14 @@
 - **Dynamic Profile Avatars**
     - Profiles can have a custom avatar image (configured via `avatar` field in `manifest.json`).
     - Switching profiles updates **all visible agent avatars** in the chat and sidebar in real-time.
-    - Switching back to Default restores the original ShibaClaw logo.
+    - Switching back to Default restores the original kageClaw logo.
 - **Hacker Profile — Full Security Toolkit**
     - Elite security persona with deep expertise in 7 domains: web app security, network/AD attacks, code auditing, container/cloud, cryptography, reverse engineering, and forensics.
     - Includes a curated **toolkit of 50+ security tools and packages** (Python, Node.js, CLI) with quick-install commands.
     - Follows OWASP WSTG, PTES, MITRE ATT&CK, NIST, CIS Benchmarks, and Kill Chain methodologies.
     - Structured vulnerability reporting with CVSS v3.1/v4.0 scores, CWE, and MITRE ATT&CK mapping.
     - 10-step code audit checklist from attack surface mapping to full report.
-    - Custom hacker avatar (red cyber-shiba with sunglasses).
+    - Custom hacker avatar (red cyber-kage with sunglasses).
 - **Profile Startup Sync**
     - Built-in profile templates are auto-synced to the workspace on startup (like skills).
     - Corrupted or missing manifests are automatically repaired.
@@ -715,7 +715,7 @@
 - **OpenAI Codex OAuth in WebUI**
     - Codex login now works from the WebUI Settings → OAuth panel via `oauth-cli-kit` device flow, replacing the previous `501 Not Implemented` stub.
 - **Documentation**
-    - Added `shibaclaw web` mode to the deploy guide and useful commands table.
+    - Added `kageclaw web` mode to the deploy guide and useful commands table.
     - Added `memory` and `cron` skills to the skills README.
 
 ### Fixed
@@ -769,8 +769,8 @@
     - `index.css` (3,293 lines) split into 9 thematic stylesheets in `static/css/`: `vars.css`, `sidebar.css`, `chat.css`, `responsive.css`, `panels.css`, `modals.css`, `modals_responsive.css`, `login.css`, `components.css`. Entry `index.css` now uses `@import` directives.
     - index.html updated to load the new JS modules in dependency order.
 - **Architecture: Backend Modularization**
-    - `api.py` (1,038 lines) refactored: route handlers extracted into `shibaclaw/webui/routers/` package with 10 focused modules (`auth.py`, `sessions.py`, `settings.py`, `fs.py`, `gateway.py`, `heartbeat.py`, `oauth.py`, `cron.py`, `system.py`, `onboard.py`).
-    - Shared helpers (`_gateway_request`, `_deep_merge`, `_redact_secrets`, `_resolve_workspace_path`, context caches) moved to new `shibaclaw/webui/utils.py` to prevent circular imports.
+    - `api.py` (1,038 lines) refactored: route handlers extracted into `kageclaw/webui/routers/` package with 10 focused modules (`auth.py`, `sessions.py`, `settings.py`, `fs.py`, `gateway.py`, `heartbeat.py`, `oauth.py`, `cron.py`, `system.py`, `onboard.py`).
+    - Shared helpers (`_gateway_request`, `_deep_merge`, `_redact_secrets`, `_resolve_workspace_path`, context caches) moved to new `kageclaw/webui/utils.py` to prevent circular imports.
     - `api.py` now re-exports all route handlers for backward compatibility with `server.py`.
 - **Codebase Cleanup**
     - Removed redundant comments and consolidated duplicated logic across `api.py`, `socket_io.py`, `loop.py`, and `app.js`.
@@ -824,13 +824,13 @@
 - **Compaction triggering too late** — Lowered the consolidation trigger threshold from 100% to 60% of context window, with a target of 40%, providing a safe margin before hitting the limit.
 - **Telegram proxy saved as `{}` instead of `null`** — Fixed `_deep_merge` in WebUI API to correctly handle `None` values and empty dicts, preventing config corruption when the proxy field is cleared from Settings (#11).
 - **WebUI gateway health check fallback** — Fixed intermittent `Gateway Down` status in Docker by centralizing gateway host resolution and ensuring the WebUI tries both local host and the Docker gateway hostname when the gateway is configured as `127.0.0.1`/`localhost`.
-- **Heartbeat unreachable in standalone WebUI** — Fixed `heartbeat_status: gateway request failed` when running `shibaclaw web` without a separate gateway process. The WebUI now initializes its own `HeartbeatService` and falls back to it when the gateway is not available.
+- **Heartbeat unreachable in standalone WebUI** — Fixed `heartbeat_status: gateway request failed` when running `kageclaw web` without a separate gateway process. The WebUI now initializes its own `HeartbeatService` and falls back to it when the gateway is not available.
 - **"Gateway Down" in standalone mode** — Fixed the WebUI health check reporting the gateway as down when running in bare-metal standalone mode. The health check now falls back to the local agent's status if no external gateway is found.
 
 ## [0.0.14] - 2026-04-06
 
 ### Fixed
-- **Gateway health check in bare metal setups** — Fixed false "Gateway Down" status in WebUI when running `pip install` setups. The health check now correctly uses the configured `gateway.host` value (e.g. `127.0.0.1`) instead of defaulting to the Docker-only `shibaclaw-gateway` hostname.
+- **Gateway health check in bare metal setups** — Fixed false "Gateway Down" status in WebUI when running `pip install` setups. The health check now correctly uses the configured `gateway.host` value (e.g. `127.0.0.1`) instead of defaulting to the Docker-only `kageclaw-gateway` hostname.
 - Affected functions: `api_gateway_health`, `_gateway_request`, `api_gateway_restart` in `api.py`, and `_poll_github_token` in `oauth_github.py`.
 
 ## [0.0.13] - 2026-04-06
@@ -862,7 +862,7 @@
 ### Changed
 - Long-term memory is now split between `USER.md` for durable personal profile data and `memory/MEMORY.md` for operational project context.
 - `memory/MEMORY.md` now follows a priority-based structure: `Environment`, `Entities`, `Project State`, and `Dynamic Context`.
-- `shibaclaw onboard` is now the primary setup command; the old `--wizard` flow has been removed in favor of the new guided experience.
+- `kageclaw onboard` is now the primary setup command; the old `--wizard` flow has been removed in favor of the new guided experience.
 - The WebUI now includes onboarding entry points from startup, settings, and the empty-state experience, plus a refreshed footer layout.
 - Release metadata now includes a dedicated `CHANGELOG.md`, a richer 0.0.12 update manifest, and automatic manifest upload in the release workflow.
 
@@ -874,6 +874,6 @@
 - Update manifest path handling is normalized so the update panel can correctly identify changed personal files in this and older manifest formats.
 
 ### Upgrade Notes
-- Run `shibaclaw onboard` after upgrading if you want to refresh workspace templates and built-in skills for the new onboarding and memory layout.
+- Run `kageclaw onboard` after upgrading if you want to refresh workspace templates and built-in skills for the new onboarding and memory layout.
 - Existing `USER.md`, `memory/MEMORY.md`, `memory/HISTORY.md`, and workspace skill files are preserved unless you explicitly overwrite them.
 - Restart the WebUI or Docker stack after upgrading so cron and heartbeat services pick up the new session-aware routing logic.

@@ -18,7 +18,7 @@
             "note": "Updated welcome announcement to v0.7.5."
         },
         {
-            "path": "shibaclaw/updater/update_manifest.json",
+            "path": "kageclaw/updater/update_manifest.json",
             "overwrite": true,
             "note": "Bumped packaged update manifest to v0.7.5."
         }

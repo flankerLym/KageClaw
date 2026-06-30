@@ -2,7 +2,7 @@ import pytest
 from unittest.mock import AsyncMock, MagicMock
 
 from mcp import types
-from shibaclaw.agent.tools.mcp import (
+from kageclaw.agent.tools.mcp import (
     MCPListTools,
     MCPCallTool,
     _mcp_sessions,

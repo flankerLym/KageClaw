@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from shibaclaw.agent.tools.memory_search import (
+from kageclaw.agent.tools.memory_search import (
     MemorySearchTool,
     _build_idf,
     _importance_score,
@@ -223,7 +223,7 @@ class TestMemoryTemplate:
     def test_section_order(self):
         template_path = (
             Path(__file__).resolve().parent.parent
-            / "shibaclaw"
+            / "kageclaw"
             / "templates"
             / "memory"
             / "MEMORY.md"
@@ -238,7 +238,7 @@ class TestMemoryTemplate:
 
 class TestUserProfileStore:
     def test_reads_and_writes_user_profile(self, tmp_path):
-        from shibaclaw.agent.memory import ScentKeeper
+        from kageclaw.agent.memory import ScentKeeper
 
         keeper = ScentKeeper(tmp_path)
         assert keeper.read_user_profile() == ""
@@ -258,7 +258,7 @@ class TestUserProfileStore:
 
 class TestTruncationOrder:
     def test_drops_dynamic_first(self):
-        from shibaclaw.agent.memory import ScentKeeper
+        from kageclaw.agent.memory import ScentKeeper
 
         content = textwrap.dedent("""\
             ## Environment

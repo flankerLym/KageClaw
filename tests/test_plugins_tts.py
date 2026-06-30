@@ -2,11 +2,11 @@ from unittest.mock import patch, MagicMock, AsyncMock
 import pytest
 from starlette.testclient import TestClient
 
-from shibaclaw.config.schema import Config
-from shibaclaw.tts.base import BaseTTS
-from shibaclaw.tts.registry import discover_tts_plugins
-from shibaclaw.webui.agent_manager import agent_manager
-from shibaclaw.webui.server import create_app
+from kageclaw.config.schema import Config
+from kageclaw.tts.base import BaseTTS
+from kageclaw.tts.registry import discover_tts_plugins
+from kageclaw.webui.agent_manager import agent_manager
+from kageclaw.webui.server import create_app
 
 class DummyTTS(BaseTTS):
     name = "dummy"
@@ -23,7 +23,7 @@ def mock_config(tmp_path):
     class DummyProvider:
         pass
 
-    with patch("shibaclaw.webui.auth._auth_enabled", return_value=False):
+    with patch("kageclaw.webui.auth._auth_enabled", return_value=False):
         yield config, DummyProvider()
 
 @pytest.fixture
@@ -39,7 +39,7 @@ def test_discover_tts_plugins():
     mock_ep.name = "dummy"
     mock_ep.load.return_value = DummyTTS
 
-    with patch("shibaclaw.tts.registry.entry_points", return_value=[mock_ep]):
+    with patch("kageclaw.tts.registry.entry_points", return_value=[mock_ep]):
         plugins = discover_tts_plugins()
         assert "dummy" in plugins
         assert plugins["dummy"] == DummyTTS
@@ -49,7 +49,7 @@ def test_api_list_plugins(client):
     mock_ep.name = "dummy"
     mock_ep.load.return_value = DummyTTS
 
-    with patch("shibaclaw.tts.registry.entry_points", return_value=[mock_ep]):
+    with patch("kageclaw.tts.registry.entry_points", return_value=[mock_ep]):
         response = client.get("/api/plugins")
         assert response.status_code == 200
         data = response.json()
@@ -73,9 +73,9 @@ async def test_api_install_plugin_success(client):
 
     with patch("asyncio.create_subprocess_exec", return_value=mock_proc) as mock_exec, \
          patch("asyncio.sleep", new_callable=AsyncMock), \
-         patch("shibaclaw.webui.routers.system._schedule_restart_outside_loop"), \
-         patch("shibaclaw.webui.routers.system._graceful_shutdown_server"):
-        response = client.post("/api/plugins/install", json={"package": "shibaclaw-tts-supertonic"})
+         patch("kageclaw.webui.routers.system._schedule_restart_outside_loop"), \
+         patch("kageclaw.webui.routers.system._graceful_shutdown_server"):
+        response = client.post("/api/plugins/install", json={"package": "kageclaw-tts-supertonic"})
         assert response.status_code == 200
         data = response.json()
         assert data["ok"] is True
@@ -97,9 +97,9 @@ async def test_api_uninstall_plugin_success(client):
 
     with patch("asyncio.create_subprocess_exec", return_value=mock_proc) as mock_exec, \
          patch("asyncio.sleep", new_callable=AsyncMock), \
-         patch("shibaclaw.webui.routers.system._schedule_restart_outside_loop"), \
-         patch("shibaclaw.webui.routers.system._graceful_shutdown_server"):
-        response = client.post("/api/plugins/uninstall", json={"package": "shibaclaw-tts-supertonic"})
+         patch("kageclaw.webui.routers.system._schedule_restart_outside_loop"), \
+         patch("kageclaw.webui.routers.system._graceful_shutdown_server"):
+        response = client.post("/api/plugins/uninstall", json={"package": "kageclaw-tts-supertonic"})
         assert response.status_code == 200
         data = response.json()
         assert data["ok"] is True

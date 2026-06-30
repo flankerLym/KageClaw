@@ -1,9 +1,9 @@
-import json
+﻿import json
 import time
 
 
 def test_check_for_update_uses_fresh_cache(tmp_path, monkeypatch):
-    from shibaclaw.updater import checker
+    from kageclaw.updater import checker
 
     cache_file = tmp_path / "update_cache.json"
     result = {
@@ -15,11 +15,11 @@ def test_check_for_update_uses_fresh_cache(tmp_path, monkeypatch):
         "update_available": True,
         "action_kind": "automatic",
         "action_label": "Update now",
-        "action_command": "pip install --upgrade shibaclaw",
-        "action_url": "https://github.com/RikyZ90/ShibaClaw/releases/tag/v0.3.8",
-        "release_url": "https://github.com/RikyZ90/ShibaClaw/releases/tag/v0.3.8",
+        "action_command": "pip install --upgrade kageclaw",
+        "action_url": "https://github.com/flankerLym/KageClaw/releases/tag/v0.3.8",
+        "release_url": "https://github.com/flankerLym/KageClaw/releases/tag/v0.3.8",
         "download_url": None,
-        "manifest_url": "https://github.com/RikyZ90/ShibaClaw/releases/download/v0.3.8/update_manifest.json",
+        "manifest_url": "https://github.com/flankerLym/KageClaw/releases/download/v0.3.8/update_manifest.json",
         "notification": None,
         "checked_at": int(time.time()),
         "error": None,
@@ -50,7 +50,7 @@ def test_check_for_update_uses_fresh_cache(tmp_path, monkeypatch):
 
 
 def test_check_for_update_falls_back_to_last_success(tmp_path, monkeypatch):
-    from shibaclaw.updater import checker
+    from kageclaw.updater import checker
 
     cache_file = tmp_path / "update_cache.json"
     stale = {
@@ -62,11 +62,11 @@ def test_check_for_update_falls_back_to_last_success(tmp_path, monkeypatch):
         "update_available": True,
         "action_kind": "automatic",
         "action_label": "Update now",
-        "action_command": "pip install --upgrade shibaclaw",
-        "action_url": "https://github.com/RikyZ90/ShibaClaw/releases/tag/v0.3.8",
-        "release_url": "https://github.com/RikyZ90/ShibaClaw/releases/tag/v0.3.8",
+        "action_command": "pip install --upgrade kageclaw",
+        "action_url": "https://github.com/flankerLym/KageClaw/releases/tag/v0.3.8",
+        "release_url": "https://github.com/flankerLym/KageClaw/releases/tag/v0.3.8",
         "download_url": None,
-        "manifest_url": "https://github.com/RikyZ90/ShibaClaw/releases/download/v0.3.8/update_manifest.json",
+        "manifest_url": "https://github.com/flankerLym/KageClaw/releases/download/v0.3.8/update_manifest.json",
         "notification": None,
         "checked_at": 1,
         "error": None,
@@ -97,22 +97,22 @@ def test_check_for_update_falls_back_to_last_success(tmp_path, monkeypatch):
 
 
 def test_check_exe_uses_release_assets(monkeypatch):
-    from shibaclaw.updater import checker
+    from kageclaw.updater import checker
 
     monkeypatch.setattr(
         checker,
         "_request_json",
         lambda url: {
             "tag_name": "v0.3.8",
-            "html_url": "https://github.com/RikyZ90/ShibaClaw/releases/tag/v0.3.8",
+            "html_url": "https://github.com/flankerLym/KageClaw/releases/tag/v0.3.8",
             "assets": [
                 {
-                    "name": "ShibaClaw-windows.zip",
-                    "browser_download_url": "https://github.com/RikyZ90/ShibaClaw/releases/download/v0.3.8/ShibaClaw-windows.zip",
+                    "name": "kageClaw-windows.zip",
+                    "browser_download_url": "https://github.com/flankerLym/KageClaw/releases/download/v0.3.8/kageClaw-windows.zip",
                 },
                 {
                     "name": "update_manifest.json",
-                    "browser_download_url": "https://github.com/RikyZ90/ShibaClaw/releases/download/v0.3.8/update_manifest.json",
+                    "browser_download_url": "https://github.com/flankerLym/KageClaw/releases/download/v0.3.8/update_manifest.json",
                 },
             ],
         },
@@ -122,14 +122,14 @@ def test_check_exe_uses_release_assets(monkeypatch):
     result = checker._check_exe("0.3.7")
 
     assert result["update_available"] is True
-    assert result["download_url"].endswith("ShibaClaw-windows.zip")
+    assert result["download_url"].endswith("kageClaw-windows.zip")
     assert result["manifest_url"].endswith("update_manifest.json")
     assert result["action_kind"] == "automatic"
     assert result["notification"]["category"] == "update"
 
 
 def test_check_source_returns_manual_guidance_for_non_official_repo(tmp_path, monkeypatch):
-    from shibaclaw.updater import checker
+    from kageclaw.updater import checker
 
     monkeypatch.setattr(checker, "get_runtime_root_path", lambda: tmp_path)
     monkeypatch.setattr(checker, "is_official_repo_checkout", lambda root=None: False)
@@ -142,7 +142,7 @@ def test_check_source_returns_manual_guidance_for_non_official_repo(tmp_path, mo
 
 
 def test_check_source_uses_release_manifest_for_official_repo(tmp_path, monkeypatch):
-    from shibaclaw.updater import checker
+    from kageclaw.updater import checker
 
     monkeypatch.setattr(checker, "get_runtime_root_path", lambda: tmp_path)
     monkeypatch.setattr(checker, "is_official_repo_checkout", lambda root=None: True)
@@ -152,9 +152,9 @@ def test_check_source_uses_release_manifest_for_official_repo(tmp_path, monkeypa
         lambda: {
             "latest": "0.3.8",
             "tagged_version": "0.3.8",
-            "release_url": "https://github.com/RikyZ90/ShibaClaw/releases/tag/v0.3.8",
-            "manifest_url": "https://github.com/RikyZ90/ShibaClaw/releases/download/v0.3.8/update_manifest.json",
-            "download_url": "https://github.com/RikyZ90/ShibaClaw/releases/download/v0.3.8/ShibaClaw-windows.zip",
+            "release_url": "https://github.com/flankerLym/KageClaw/releases/tag/v0.3.8",
+            "manifest_url": "https://github.com/flankerLym/KageClaw/releases/download/v0.3.8/update_manifest.json",
+            "download_url": "https://github.com/flankerLym/KageClaw/releases/download/v0.3.8/kageClaw-windows.zip",
             "manifest": {"version": "0.3.8"},
             "manifest_error": None,
         },
@@ -171,7 +171,7 @@ def test_check_source_uses_release_manifest_for_official_repo(tmp_path, monkeypa
 
 def test_request_json_retries_and_reuses_client(monkeypatch):
     import pytest
-    from shibaclaw.updater import checker
+    from kageclaw.updater import checker
     import httpx
 
     client_instantiations = 0

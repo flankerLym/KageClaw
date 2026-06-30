@@ -1,7 +1,7 @@
-import pytest
+﻿import pytest
 from unittest.mock import AsyncMock, MagicMock
-from shibaclaw.integrations.telegram import TelegramChannel, TelegramConfig
-from shibaclaw.bus.queue import MessageBus
+from kageclaw.integrations.telegram import TelegramChannel, TelegramConfig
+from kageclaw.bus.queue import MessageBus
 from loguru import logger
 
 logger.remove()

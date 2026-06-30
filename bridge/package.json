@@ -1,7 +1,7 @@
 {
-  "name": "shibaclaw-whatsapp-bridge",
+  "name": "kageclaw-whatsapp-bridge",
   "version": "0.1.0",
-  "description": "WhatsApp bridge for shibaclaw using Baileys",
+  "description": "WhatsApp bridge for kageclaw using Baileys",
   "type": "module",
   "main": "dist/index.js",
   "scripts": {

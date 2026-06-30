@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1
+﻿# syntax=docker/dockerfile:1
 # STAGE 1: Builder
 FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim AS builder
 
@@ -55,4 +55,4 @@ RUN chmod +x /entrypoint.sh
 EXPOSE 19999 19998 3000
 
 ENTRYPOINT ["/entrypoint.sh"]
-CMD ["shibaclaw", "gateway"]
+CMD ["kageclaw", "gateway"]

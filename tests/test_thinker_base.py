@@ -1,4 +1,4 @@
-from shibaclaw.thinkers.base import Thinker
+from kageclaw.thinkers.base import Thinker
 
 
 def test_sanitize_empty_content_early_return():

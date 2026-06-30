@@ -1,11 +1,11 @@
 [project]
-name = "shibaclaw"
+name = "kageclaw"
 version = "0.7.5"
 description = "A lightweight personal AI assistant framework"
 requires-python = ">=3.12"
 license = {text = "Apache-2.0"}
 authors = [
-    {name = "shibaclaw contributors"}
+    {name = "kageclaw contributors"}
 ]
 keywords = ["ai", "agent", "chatbot"]
 classifiers = [
@@ -89,7 +89,7 @@ windows-native = [
     "pythonnet>=3.0,<4.0",
 ]
 all-channels = [
-    "shibaclaw[telegram,slack,dingtalk,feishu,qq,wecom,matrix]",
+    "kageclaw[telegram,slack,dingtalk,feishu,qq,wecom,matrix]",
 ]
 dev = [
     "pytest>=9.0.3,<10.0.0",
@@ -100,10 +100,10 @@ dev = [
 ]
 
 [project.scripts]
-shibaclaw = "shibaclaw.cli.commands:app"
+kageclaw = "kageclaw.cli.commands:app"
 
 [project.gui-scripts]
-shibaclaw-desktop = "shibaclaw.desktop.__main__:main"
+kageclaw-desktop = "kageclaw.desktop.__main__:main"
 
 [build-system]
 requires = ["hatchling"]
@@ -114,26 +114,23 @@ allow-direct-references = true
 
 [tool.hatch.build]
 include = [
-    "shibaclaw/**/*.py",
-    "shibaclaw/**/*.json",
-    "shibaclaw/templates/**/*.md",
-    "shibaclaw/skills/**/*.md",
-    "shibaclaw/skills/**/*.sh",
-    "shibaclaw/webui/static/**/*",
+    "kageclaw/**/*.py",
+    "kageclaw/**/*.json",
+    "kageclaw/templates/**/*.md",
+    "kageclaw/skills/**/*.md",
+    "kageclaw/skills/**/*.sh",
+    "kageclaw/webui/static/**/*",
 ]
 
 [tool.hatch.build.targets.wheel]
-packages = ["shibaclaw"]
+packages = ["kageclaw"]
 
 [tool.hatch.build.targets.wheel.sources]
-"shibaclaw" = "shibaclaw"
-
-[tool.hatch.build.targets.wheel.force-include]
-"assets" = "shibaclaw/assets"
+"kageclaw" = "kageclaw"
 
 [tool.hatch.build.targets.sdist]
 include = [
-    "shibaclaw/",
+    "kageclaw/",
     "README.md",
     "LICENSE",
 ]

@@ -1,11 +1,11 @@
 x-common-env: &common-env
   TZ: Europe/Rome
-  OR_SITE_URL: https://github.com/RikyZ90/ShibaClaw
-  OR_APP_NAME: ShibaClaw
-  # SHIBACLAW_DEBUG: "true"  # Uncomment to enable debug logging
+  OR_SITE_URL: https://github.com/flankerLym/KageClaw
+  OR_APP_NAME: kageClaw
+  # kageCLAW_DEBUG: "true"  # Uncomment to enable debug logging
 
 x-common-config: &common-config
-  image: rikyz90/shibaclaw:latest
+  image: rikyz90/kageclaw:latest
   deploy:
     resources:
       limits:
@@ -17,16 +17,16 @@ x-common-config: &common-config
   environment:
     <<: *common-env
   volumes:
-    - ./.shibaclaw:/root/.shibaclaw # app data & main config
-    - ./.shibaclaw/.config:/root/.config # XDG user config dir
-    - ./.shibaclaw/.local:/root/.local # user-level installs (pip, pipx...)
-    - ./.shibaclaw/.cache:/root/.cache # package/build cache
-    - ./.shibaclaw/tools:/opt/tools # custom tools installed at runtime
-    - ./.shibaclaw/bin:/usr/local/bin # persist globally installed executables (git, gh)
-    - ./.shibaclaw/.gitconfig:/root/.gitconfig # persist user git config (optional)
+    - ./.kageclaw:/root/.kageclaw # app data & main config
+    - ./.kageclaw/.config:/root/.config # XDG user config dir
+    - ./.kageclaw/.local:/root/.local # user-level installs (pip, pipx...)
+    - ./.kageclaw/.cache:/root/.cache # package/build cache
+    - ./.kageclaw/tools:/opt/tools # custom tools installed at runtime
+    - ./.kageclaw/bin:/usr/local/bin # persist globally installed executables (git, gh)
+    - ./.kageclaw/.gitconfig:/root/.gitconfig # persist user git config (optional)
 services:
-  shibaclaw-gateway:
-    container_name: shibaclaw-gateway
+  kageclaw-gateway:
+    container_name: kageclaw-gateway
     <<: *common-config
     deploy:
       resources:
@@ -36,30 +36,30 @@ services:
         reservations:
           cpus: "0.2"
           memory: 256M
-    command: [ "shibaclaw", "gateway", "--host", "0.0.0.0" ]
+    command: [ "kageclaw", "gateway", "--host", "0.0.0.0" ]
     restart: unless-stopped
     ports:
       - "127.0.0.1:19999:19999"
       - "127.0.0.1:19998:19998"
 
-  shibaclaw-cli:
-    container_name: shibaclaw-cli
+  kageclaw-cli:
+    container_name: kageclaw-cli
     <<: *common-config
     profiles:
       - cli
-    command: [ "shibaclaw", "status" ]
+    command: [ "kageclaw", "status" ]
     stdin_open: true
     tty: true
 
-  shibaclaw-web:
-    container_name: shibaclaw-web
+  kageclaw-web:
+    container_name: kageclaw-web
     <<: *common-config
-    command: [ "shibaclaw", "web", "--host", "0.0.0.0", "--port", "3000" ]
+    command: [ "kageclaw", "web", "--host", "0.0.0.0", "--port", "3000" ]
     restart: unless-stopped
     depends_on:
-      - shibaclaw-gateway
+      - kageclaw-gateway
     environment:
       <<: *common-env
-      SHIBACLAW_CORS_ORIGINS: "*"
+      kageCLAW_CORS_ORIGINS: "*"
     ports:
       - "127.0.0.1:3000:3000"

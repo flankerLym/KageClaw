@@ -3,14 +3,14 @@ import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 from collections import deque
 
-from shibaclaw.webui.ws_handler import (
+from kageclaw.webui.ws_handler import (
     _handle_user_message,
     processing_state,
     sessions,
     _ws_clients,
 )
-from shibaclaw.webui.agent_manager import agent_manager
-from shibaclaw.webui.gateway_client import gateway_client
+from kageclaw.webui.agent_manager import agent_manager
+from kageclaw.webui.gateway_client import gateway_client
 
 
 @pytest.mark.asyncio
@@ -43,9 +43,9 @@ async def test_ws_handler_multi_tab_race_condition():
         await first_job_can_finish.wait()
         yield {"t": "rt", "c": "Hello!"}
 
-    with patch("shibaclaw.webui.ws_handler._emit_to_session", AsyncMock()), \
-         patch("shibaclaw.webui.ws_handler._emit_to_ws", AsyncMock()), \
-         patch("shibaclaw.webui.ws_handler._emit_session_status_all", AsyncMock()), \
+    with patch("kageclaw.webui.ws_handler._emit_to_session", AsyncMock()), \
+         patch("kageclaw.webui.ws_handler._emit_to_ws", AsyncMock()), \
+         patch("kageclaw.webui.ws_handler._emit_session_status_all", AsyncMock()), \
          patch.object(gateway_client, "chat_stream", side_effect=mock_chat_stream):
 
         task1 = asyncio.create_task(
@@ -95,7 +95,7 @@ async def test_ws_handler_steering():
 
     mock_request = AsyncMock(return_value={"injected": True})
 
-    with patch("shibaclaw.webui.ws_handler._emit_to_session", AsyncMock()) as mock_emit, \
+    with patch("kageclaw.webui.ws_handler._emit_to_session", AsyncMock()) as mock_emit, \
          patch.object(gateway_client, "request", mock_request):
 
         await _handle_user_message("ws1", ws1, {"content": "Steering comment", "id": "msg2"})
@@ -143,7 +143,7 @@ async def test_ws_handler_steering_fallback():
 
     mock_request = AsyncMock(return_value={"injected": False})
 
-    with patch("shibaclaw.webui.ws_handler._emit_to_session", AsyncMock()), \
+    with patch("kageclaw.webui.ws_handler._emit_to_session", AsyncMock()), \
          patch.object(gateway_client, "request", mock_request):
 
         await _handle_user_message("ws1", ws1, {"content": "Normal comment", "id": "msg2"})

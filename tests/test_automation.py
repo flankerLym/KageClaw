@@ -1,9 +1,9 @@
 import asyncio
 import pytest
 
-from shibaclaw.automation.service import AutomationService
-from shibaclaw.automation.types import AutomationPayload, AutomationSchedule
-from shibaclaw.agent.tools.automation import AutomationTool
+from kageclaw.automation.service import AutomationService
+from kageclaw.automation.types import AutomationPayload, AutomationSchedule
+from kageclaw.agent.tools.automation import AutomationTool
 
 
 def test_automation_service_add_get_remove_job(tmp_path):

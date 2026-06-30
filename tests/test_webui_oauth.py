@@ -5,10 +5,10 @@ from types import SimpleNamespace
 import pytest
 from starlette.requests import Request
 
-from shibaclaw.config.schema import Config
-from shibaclaw.webui.agent_manager import agent_manager
-from shibaclaw.webui.oauth_github import start_codex_oauth, start_openrouter_oauth
-from shibaclaw.webui.routers.oauth import api_oauth_login, api_oauth_openrouter_callback
+from kageclaw.config.schema import Config
+from kageclaw.webui.agent_manager import agent_manager
+from kageclaw.webui.oauth_github import start_codex_oauth, start_openrouter_oauth
+from kageclaw.webui.routers.oauth import api_oauth_login, api_oauth_openrouter_callback
 
 
 def _json_request(payload: dict) -> Request:
@@ -60,7 +60,7 @@ class TestOAuthRouter:
     async def test_api_oauth_login_dispatches_to_webui_helper(
         self, monkeypatch, provider, helper_name
     ):
-        import shibaclaw.webui.oauth_github as oauth_helpers
+        import kageclaw.webui.oauth_github as oauth_helpers
 
         agent_manager.oauth_jobs.clear()
 
@@ -92,7 +92,7 @@ class TestCodexOAuth:
         import oauth_cli_kit.server as server
         import oauth_cli_kit.storage as storage
 
-        import shibaclaw.webui.oauth_github as oauth_module
+        import kageclaw.webui.oauth_github as oauth_module
 
         saved_tokens = []
         observed = {}
@@ -166,7 +166,7 @@ class TestCodexOAuth:
         assert observed["verifier"] == "verifier-123"
         assert observed["provider"].client_id == "client-id"
         assert saved_tokens and saved_tokens[0][0] == "codex.json"
-        cred_path = tmp_path / ".config" / "shibaclaw" / "openai_codex" / "credentials.json"
+        cred_path = tmp_path / ".config" / "kageclaw" / "openai_codex" / "credentials.json"
         assert cred_path.exists()
         cred_data = json.loads(cred_path.read_text(encoding="utf-8"))
         assert cred_data["access"] == "access-token"
@@ -199,7 +199,7 @@ class TestOpenRouterOAuth:
     ):
         jobs = {"job-2": {"provider": "openrouter", "status": "running", "logs": []}}
         monkeypatch.setenv(
-            "SHIBACLAW_OPENROUTER_CALLBACK_BASE_URL", "https://chat.example.test:8443"
+            "kageCLAW_OPENROUTER_CALLBACK_BASE_URL", "https://chat.example.test:8443"
         )
 
         response = await start_openrouter_oauth(_get_request("/api/oauth/login"), "job-2", jobs)
@@ -212,7 +212,7 @@ class TestOpenRouterOAuth:
 
     @pytest.mark.asyncio
     async def test_openrouter_callback_exchanges_code_and_persists_api_key(self, monkeypatch):
-        import shibaclaw.webui.oauth_github as oauth_module
+        import kageclaw.webui.oauth_github as oauth_module
 
         original_config = agent_manager.config
         original_provider = agent_manager.provider
@@ -261,7 +261,7 @@ class TestOpenRouterOAuth:
 
     @pytest.mark.asyncio
     async def test_openrouter_callback_still_accepts_legacy_query_state(self, monkeypatch):
-        import shibaclaw.webui.oauth_github as oauth_module
+        import kageclaw.webui.oauth_github as oauth_module
 
         async def fake_exchange(code, code_verifier):
             assert code == "oauth-code-456"

@@ -1,6 +1,6 @@
-from shibaclaw.agent.loop import ShibaBrain
-from shibaclaw.cli.base import _make_provider
-from shibaclaw.config.schema import Config
+from kageclaw.agent.loop import kageBrain
+from kageclaw.cli.base import _make_provider
+from kageclaw.config.schema import Config
 
 
 def test_gemini_uses_google_openai_compat_base_url():
@@ -55,8 +55,8 @@ def test_provider_config_strips_whitespace_from_api_base_and_key():
     assert cfg.providers.custom.api_key == "lm-studio"
 
 
-def test_shibabrain_resolves_provider_from_session_model(monkeypatch):
-    import shibaclaw.cli.base as base_module
+def test_kagebrain_resolves_provider_from_session_model(monkeypatch):
+    import kageclaw.cli.base as base_module
 
     cfg = Config.model_validate(
         {
@@ -76,20 +76,20 @@ def test_shibabrain_resolves_provider_from_session_model(monkeypatch):
 
     monkeypatch.setattr(base_module, "_make_provider", fake_make_provider)
 
-    brain = object.__new__(ShibaBrain)
+    brain = object.__new__(kageBrain)
     brain.config = cfg
     brain.provider = "provider:default"
     brain.model = cfg.agents.defaults.model
     brain._provider_cache = {}
 
-    resolved = ShibaBrain._resolve_provider_for_model(brain, "github_copilot/gpt-4.1")
+    resolved = kageBrain._resolve_provider_for_model(brain, "github_copilot/gpt-4.1")
 
     assert resolved == "provider:github_copilot/gpt-4.1"
     assert created_models == ["github_copilot/gpt-4.1"]
 
 
-def test_shibabrain_ignores_forced_global_provider_for_session_override(monkeypatch):
-    import shibaclaw.cli.base as base_module
+def test_kagebrain_ignores_forced_global_provider_for_session_override(monkeypatch):
+    import kageclaw.cli.base as base_module
 
     cfg = Config.model_validate(
         {
@@ -114,20 +114,20 @@ def test_shibabrain_ignores_forced_global_provider_for_session_override(monkeypa
 
     monkeypatch.setattr(base_module, "_make_provider", fake_make_provider)
 
-    brain = object.__new__(ShibaBrain)
+    brain = object.__new__(kageBrain)
     brain.config = cfg
     brain.provider = "provider:github_copilot/gpt-4.1"
     brain.model = cfg.agents.defaults.model
     brain._provider_cache = {}
 
-    resolved = ShibaBrain._resolve_provider_for_model(brain, "openrouter/google/gemma-4-31b-it")
+    resolved = kageBrain._resolve_provider_for_model(brain, "openrouter/google/gemma-4-31b-it")
 
     assert resolved == "provider:openrouter/google/gemma-4-31b-it"
     assert created_models == ["openrouter/google/gemma-4-31b-it"]
 
 
-def test_shibabrain_steering_message_injection():
-    brain = object.__new__(ShibaBrain)
+def test_kagebrain_steering_message_injection():
+    brain = object.__new__(kageBrain)
     brain._steering_queues = {}
     
     assert brain.inject_steering_message("session_key_1", "Hello") is False

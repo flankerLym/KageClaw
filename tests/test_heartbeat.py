@@ -3,19 +3,19 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from shibaclaw.brain.manager import PackManager
-from shibaclaw.cli.gateway import (
+from kageclaw.brain.manager import PackManager
+from kageclaw.cli.gateway import (
     deliver_scheduled_job_result,
     resolve_automation_target,
     resolve_heartbeat_targets,
     resolve_webui_session_key,
     select_heartbeat_target,
 )
-from shibaclaw.automation.service import AutomationService, _extract_active_tasks
-from shibaclaw.automation.types import AutomationJob, AutomationJobState, AutomationPayload, AutomationSchedule
-from shibaclaw.helpers.evaluator import evaluate_response
-from shibaclaw.thinkers.base import LLMResponse, ToolCallRequest
-from shibaclaw.webui.agent_manager import AgentManager
+from kageclaw.automation.service import AutomationService, _extract_active_tasks
+from kageclaw.automation.types import AutomationJob, AutomationJobState, AutomationPayload, AutomationSchedule
+from kageclaw.helpers.evaluator import evaluate_response
+from kageclaw.thinkers.base import LLMResponse, ToolCallRequest
+from kageclaw.webui.agent_manager import AgentManager
 
 
 class RecordingProvider:
@@ -296,7 +296,7 @@ class TestWebuiHeartbeatDelivery:
         manager.config = SimpleNamespace(workspace_path=tmp_path)
 
         with patch(
-            "shibaclaw.webui.ws_handler.deliver_to_browsers", AsyncMock(return_value=1)
+            "kageclaw.webui.ws_handler.deliver_to_browsers", AsyncMock(return_value=1)
         ) as mock_deliver:
             result = await manager.deliver_background_notification(
                 "webui:recent",
@@ -324,7 +324,7 @@ class TestWebuiHeartbeatDelivery:
         manager.config = SimpleNamespace(workspace_path=tmp_path)
 
         with patch(
-            "shibaclaw.webui.ws_handler.deliver_to_browsers", AsyncMock(return_value=1)
+            "kageclaw.webui.ws_handler.deliver_to_browsers", AsyncMock(return_value=1)
         ) as mock_deliver:
             result = await manager.deliver_background_notification(
                 "webui:recent",
@@ -578,7 +578,7 @@ class TestHeartbeatMultiChannel:
         from unittest.mock import AsyncMock, patch
 
         with patch(
-            "shibaclaw.helpers.evaluator.evaluate_response",
+            "kageclaw.helpers.evaluator.evaluate_response",
             new_callable=AsyncMock,
             return_value=True,
         ):
