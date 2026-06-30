@@ -1,0 +1,24 @@
+[project]
+name = "kageclaw-channel-whatsapp"
+version = "0.1.0"
+description = "WhatsApp channel plugin for kageClaw using a Node.js bridge (Baileys)"
+dependencies = [
+    "kageclaw",
+    "websockets>=16.0,<17.0",
+]
+
+[project.entry-points."kageclaw.integrations"]
+whatsapp = "kageclaw_channel_whatsapp:WhatsAppChannel"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build]
+include = [
+    "kageclaw_channel_whatsapp/**/*.py",
+    "kageclaw_channel_whatsapp/bridge/**/*",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["kageclaw_channel_whatsapp"]

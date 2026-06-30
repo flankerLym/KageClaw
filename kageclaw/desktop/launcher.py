@@ -1,0 +1,543 @@
+"""Native Windows launcher for kageClaw using pywebview.
+
+Starts the full :class:`~kageclaw.desktop.runtime.DesktopRuntime`, opens an
+embedded WebView window that is auto-authenticated, and wires the window close
+button to hide-to-tray behaviour (ready for future pystray integration).
+
+Entry point::
+
+    python -m kageclaw desktop      # via CLI command added in commands.py
+    kageClaw.exe                    # frozen PyInstaller build
+"""
+
+from __future__ import annotations
+
+import os
+import sys
+import threading
+from typing import Any
+
+from loguru import logger
+
+from kageclaw.config.paths import get_assets_dir
+from kageclaw.desktop.controller import DesktopController
+from kageclaw.desktop.runtime import DesktopRuntime
+from kageclaw.desktop.window_state import WindowState, load_window_state, save_window_state
+from kageclaw.helpers.system import get_os_type, is_running_as_exe
+
+WINDOWS_APP_USER_MODEL_ID = "RikyZ90.kageClaw.Desktop"
+
+# ---------------------------------------------------------------------------
+# Public entry point
+# ---------------------------------------------------------------------------
+
+def run(
+    port: int = 3000,
+    host: str = "127.0.0.1",
+    config_path: str | None = None,
+    workspace: str | None = None,
+    with_gateway: bool = True,
+    close_policy: str | None = None,
+    disable_auth: bool = False,
+) -> None:
+    """Bootstrap the runtime and open the native window.
+
+    *close_policy* controls what happens when the user clicks the window's
+    close button:
+
+    * ``'hide'``  — hides the window (future tray will keep app alive).
+    * ``'quit'``  — performs a full clean shutdown immediately.
+
+    For local Windows source runs, WebUI auth is disabled by default unless
+    ``kageCLAW_AUTH`` is already set or ``disable_auth`` is passed explicitly.
+    """
+    if get_os_type() != "windows":
+        logger.warning(
+            "Native launcher is intended for Windows; running anyway on {}", sys.platform
+        )
+
+    _configure_desktop_auth(disable_auth=disable_auth)
+
+    if get_os_type() == "windows":
+        _set_windows_app_user_model_id()
+
+    try:
+        import webview  # type: ignore[import]
+    except ImportError:
+        print(
+            "[kageClaw] pywebview is not installed.\n"
+            "Install it with:  pip install pywebview\n"
+            "or (inside the project):  pip install -e '.[windows-native]'",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
+    # ------------------------------------------------------------------
+    # Boot the runtime
+    # ------------------------------------------------------------------
+
+    runtime = DesktopRuntime(
+        config_path=config_path,
+        workspace=workspace,
+        port=port,
+        host=host,
+        with_gateway=with_gateway,
+    )
+
+    logger.info("Starting kageClaw desktop runtime…")
+    runtime.start()
+
+    if not runtime.wait_ready(timeout=20.0):
+        logger.error("WebUI did not become ready in time — aborting")
+        runtime.stop()
+        sys.exit(1)
+
+    logger.info("WebUI ready at {}", runtime.base_url)
+
+    # ------------------------------------------------------------------
+    # Create the webview window
+    # ------------------------------------------------------------------
+    window_config = _resolve_window_config(runtime, close_policy)
+
+    window: Any = webview.create_window(
+        title="kageClaw",
+        url=runtime.authed_url,
+        width=window_config["width"],
+        height=window_config["height"],
+        x=window_config["x"],
+        y=window_config["y"],
+        resizable=True,
+        hidden=True,
+        # Frameless title bar is disabled for now; keep native chrome so the
+        # window can be moved and resized without extra JS drag handling.
+        frameless=False,
+        # Suppress the default text-selection context menu inside the WebView.
+        easy_drag=False,
+        text_select=True,
+    )
+
+    # ------------------------------------------------------------------
+    # Controller: inject window callbacks
+    # ------------------------------------------------------------------
+    quit_event = threading.Event()
+    force_exit_armed = threading.Event()
+    shutdown_complete = threading.Event()
+    initial_show_complete = threading.Event()
+
+    def _arm_force_exit(timeout: float = 3.0) -> None:
+        if force_exit_armed.is_set():
+            return
+        force_exit_armed.set()
+
+        def _force_exit_if_needed() -> None:
+            if shutdown_complete.wait(timeout=timeout):
+                return
+            logger.warning(
+                "Desktop shutdown did not finish within {} seconds; forcing process exit",
+                timeout,
+            )
+            os._exit(0)
+
+        threading.Thread(
+            target=_force_exit_if_needed,
+            name="kageclaw-force-exit",
+            daemon=True,
+        ).start()
+
+    def _quit_callback() -> None:
+        quit_event.set()
+        _arm_force_exit()
+        try:
+            window.destroy()
+        except Exception:
+            logger.debug("window.destroy() failed during quit", exc_info=True)
+
+    def _on_loaded(*_args: Any) -> None:
+        if get_os_type() == "windows":
+            icon_path = _get_windows_icon_path()
+            if icon_path:
+                _apply_windows_window_icon(window, icon_path)
+
+        if window_config["start_hidden"] or initial_show_complete.is_set():
+            return
+        initial_show_complete.set()
+        _window_show(window)
+
+    def _on_before_show(*_args: Any) -> None:
+        if get_os_type() != "windows":
+            return
+        icon_path = _get_windows_icon_path()
+        if icon_path:
+            _apply_windows_window_icon(window, icon_path)
+
+    controller = DesktopController(
+        runtime=runtime,
+        window_show=lambda: _window_show(window),
+        window_hide=lambda: _window_hide(window),
+        quit_callback=_quit_callback,
+    )
+
+    # ------------------------------------------------------------------
+    # Start System Tray
+    # ------------------------------------------------------------------
+    from kageclaw.desktop.tray import HAS_TRAY_DEPS, TrayIcon
+    if HAS_TRAY_DEPS:
+        tray = TrayIcon(controller)
+        controller.set_tray(tray)
+        tray.start()
+    else:
+        logger.debug("Optional tray dependencies (pystray, PIL) missing; tray icon disabled")
+
+    # Initialize visibility state
+    if window_config.get("start_hidden"):
+        controller.window_visible = False
+
+    # ------------------------------------------------------------------
+    # Forward notifications to native OS toast
+    # ------------------------------------------------------------------
+    from kageclaw.helpers.notification_manager import notification_manager
+    def _on_notification(notif: dict[str, Any]) -> None:
+        title = notif.get("title") or "kageClaw"
+        message = notif.get("message")
+        if message:
+            controller.send_native_notification(title, message)
+            
+    notification_manager.add_listener(_on_notification)
+
+    # ------------------------------------------------------------------
+    # Close-button policy
+    # ------------------------------------------------------------------
+    def _on_closing() -> bool:
+        """Return False to intercept (cancel) close, True to allow it."""
+        if quit_event.is_set():
+            return True
+
+        if window_config["close_policy"] == "hide":
+            _window_hide(window)
+            return False  # intercept (cancel) — do not destroy the window
+
+        controller.quit_app()
+        return False
+
+    def _on_resized(width, height):
+        save_window_state(WindowState(
+            width=width,
+            height=height,
+            x=window.x,
+            y=window.y,
+            # maximized=window.Maximized # pywebview might not expose this easily on all platforms
+        ))
+
+    def _on_moved(x, y):
+        save_window_state(WindowState(
+            width=window.width,
+            height=window.height,
+            x=x,
+            y=y
+        ))
+
+    window.events.closing += _on_closing
+    window.events.loaded += _on_loaded
+    window.events.resized += _on_resized
+    window.events.moved += _on_moved
+
+    if get_os_type() == "windows":
+        # Use a lambda to pass the window object to the handler
+        window.events.shown += lambda *args: _on_shown(window, *args)
+
+    # ------------------------------------------------------------------
+    # Start the webview event loop (blocks until quit_event or window.destroy)
+    # ------------------------------------------------------------------
+    logger.info("Opening kageClaw window")
+
+    # Suppress GPU compositing flicker on Windows: Edge WebView2 schedules GPU
+    # compositing frames asynchronously and can cause visible screen tearing /
+    # blank flashes during heavy DOM updates (streaming responses, etc.).
+    # --disable-gpu-compositing falls back to software compositing which is
+    # visually identical but eliminates the race condition that causes the flicker.
+    if get_os_type() == "windows":
+        os.environ.setdefault(
+            "WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS",
+            "--disable-gpu-compositing",
+        )
+
+    try:
+        webview.start(
+            debug=_desktop_debug_enabled(),
+            icon=_get_icon_path(),
+            gui="edgechromium",  # force Edge WebView2 on Windows; prevents fallback to mshtml
+            private_mode=False,
+        )
+    finally:
+        try:
+            tray.stop()
+        finally:
+            runtime.stop()
+            shutdown_complete.set()
+
+
+# ---------------------------------------------------------------------------
+# Internal helpers
+# ---------------------------------------------------------------------------
+
+def _refresh_taskbar_icon(window: Any) -> None:
+    """Force Windows to refresh the taskbar icon for the given window."""
+    import ctypes
+
+    hwnd = _resolve_windows_window_handle(window)
+    if not hwnd:
+        return
+
+    user32 = ctypes.windll.user32
+    swp_framechanged = 0x0020
+    swp_nomove = 0x0002
+    swp_nosize = 0x0001
+    swp_nozorder = 0x0004
+    swp_noactivate = 0x0010
+
+    user32.SetWindowPos(
+        hwnd, None, 0, 0, 0, 0,
+        swp_framechanged | swp_nomove | swp_nosize | swp_nozorder | swp_noactivate
+    )
+
+
+def _on_shown(window: Any, *_args: Any) -> None:
+    """Callback when the window is shown; ensure taskbar icon is set."""
+    if get_os_type() == "windows":
+        icon_path = _get_windows_icon_path()
+        if icon_path:
+            _apply_windows_window_icon(window, icon_path)
+            _refresh_taskbar_icon(window)
+
+
+def _window_show(window: Any) -> None:
+    try:
+        window.show()
+    except Exception as exc:
+        logger.debug("window.show() failed: {}", exc)
+
+
+def _window_hide(window: Any) -> None:
+    try:
+        window.hide()
+    except Exception as exc:
+        logger.debug("window.hide() failed: {}", exc)
+
+
+def _desktop_debug_enabled() -> bool:
+    """Return True only when desktop debug is explicitly enabled."""
+    value = os.environ.get("kageCLAW_DESKTOP_DEBUG", "").strip().lower()
+    return value in {"1", "true", "yes", "on"}
+
+
+def _resolve_window_config(runtime: DesktopRuntime, close_policy: str | None) -> dict[str, Any]:
+    """Resolve window geometry and behavior from state file or config defaults."""
+    desktop_cfg = runtime.config.desktop if runtime.config is not None else None
+    
+    # Defaults from schema
+    default_w = 880
+    default_h = 1024
+    if desktop_cfg:
+        default_w = desktop_cfg.window_width
+        default_h = desktop_cfg.window_height
+
+    # Load persisted state, falling back to config defaults
+    state = load_window_state(default_w, default_h)
+
+    return {
+        "width": state.width,
+        "height": state.height,
+        "x": state.x,
+        "y": state.y,
+        "start_hidden": desktop_cfg.start_hidden if desktop_cfg is not None else False,
+        "close_policy": close_policy or (runtime.config.desktop.close_behavior if runtime.config and runtime.config.desktop else "hide"),
+    }
+
+
+def _get_icon_path() -> str | None:
+    """Return the absolute path to the application icon if found."""
+    assets_dir = get_assets_dir()
+    candidates = [
+        assets_dir / "kageclaw.ico",
+        assets_dir / "kageclaw_256.png",
+        assets_dir / "kageclaw_128.png",
+        assets_dir / "kageclaw_64.png",
+        assets_dir / "kageclaw_32.png",
+    ]
+    for path in candidates:
+        if path.exists():
+            return str(path)
+    return None
+
+
+def _get_windows_icon_path() -> str | None:
+    """Return the .ico asset used for the native Windows window icon."""
+    icon_path = get_assets_dir() / "kageclaw.ico"
+    if icon_path.exists():
+        return str(icon_path)
+    return None
+
+
+def _set_windows_app_user_model_id() -> None:
+    """Set a stable Windows AppUserModelID for taskbar grouping and icon lookup.
+
+    For frozen PyInstaller builds we intentionally skip this step so Windows can
+    keep using the embedded .exe icon instead of a generic Python/process icon.
+    """
+    if get_os_type() != "windows":
+        return
+
+    if is_running_as_exe():
+        logger.debug("Skipping AppUserModelID on frozen executable to preserve embedded icon")
+        return
+
+    import ctypes
+    from ctypes import wintypes
+
+    try:
+        shell32 = ctypes.windll.shell32
+        shell32.SetCurrentProcessExplicitAppUserModelID.argtypes = [wintypes.LPCWSTR]
+        shell32.SetCurrentProcessExplicitAppUserModelID.restype = ctypes.c_int
+        shell32.SetCurrentProcessExplicitAppUserModelID(WINDOWS_APP_USER_MODEL_ID)
+    except Exception as exc:
+        logger.debug("Could not set Windows AppUserModelID: {}", exc)
+
+
+def _apply_windows_window_icon(window: Any, icon_path: str) -> None:
+    """Apply the icon to the native Windows window and its class.
+
+    The taskbar can still use the generic process icon unless the window class
+    and the window handle are both updated. This is especially important for
+    the pip/venv launch path, where the process is still the Python launcher.
+    """
+    import ctypes
+    from ctypes import wintypes
+
+    wm_seticon = 0x0080
+    icon_small = 0
+    icon_big = 1
+    image_icon = 1
+    lr_loadfromfile = 0x0010
+    sm_cxsmicon = 49
+    sm_cysmicon = 50
+    gcl_hicon = -14
+    gcl_hicon_sm = -34
+
+    # 1. Try .NET approach (most effective for Taskbar)
+    try:
+        import clr
+        clr.AddReference("System.Drawing")
+        import System.Drawing
+        native_window = getattr(window, "native", None)
+        if native_window is not None:
+            native_window.Icon = System.Drawing.Icon(icon_path)
+    except ImportError:
+        logger.warning("pythonnet (clr) not installed; cannot use .NET icon set. Taskbar icon may be missing.")
+    except Exception as exc:
+        logger.warning("Failed to set window icon via .NET: {}", exc)
+
+    # 2. Fallback to Win32 API (effective for Title Bar / Alt+Tab)
+    user32 = ctypes.windll.user32
+    hwnd = _resolve_windows_window_handle(window)
+    if not hwnd:
+        return
+
+    user32.LoadImageW.argtypes = [wintypes.HINSTANCE, wintypes.LPCWSTR, wintypes.UINT, ctypes.c_int, ctypes.c_int, wintypes.UINT]
+    user32.LoadImageW.restype = wintypes.HANDLE
+
+    user32.SendMessageW.argtypes = [wintypes.HWND, wintypes.UINT, wintypes.WPARAM, wintypes.LPARAM]
+    user32.SendMessageW.restype = wintypes.LPARAM
+
+    user32.GetSystemMetrics.argtypes = [ctypes.c_int]
+    user32.GetSystemMetrics.restype = ctypes.c_int
+
+    if hasattr(user32, "SetClassLongPtrW"):
+        user32.SetClassLongPtrW.argtypes = [wintypes.HWND, ctypes.c_int, ctypes.c_void_p]
+        user32.SetClassLongPtrW.restype = ctypes.c_void_p
+
+    big_icon = user32.LoadImageW(None, icon_path, image_icon, 256, 256, lr_loadfromfile)
+    small_icon = user32.LoadImageW(
+        None,
+        icon_path,
+        image_icon,
+        user32.GetSystemMetrics(sm_cxsmicon),
+        user32.GetSystemMetrics(sm_cysmicon),
+        lr_loadfromfile,
+    )
+
+    if big_icon and hasattr(user32, "SetClassLongPtrW"):
+        user32.SetClassLongPtrW(hwnd, gcl_hicon, big_icon)
+    if small_icon and hasattr(user32, "SetClassLongPtrW"):
+        user32.SetClassLongPtrW(hwnd, gcl_hicon_sm, small_icon)
+
+    if big_icon:
+        user32.SendMessageW(hwnd, wm_seticon, icon_big, big_icon)
+    if small_icon:
+        user32.SendMessageW(hwnd, wm_seticon, icon_small, small_icon)
+
+
+def _resolve_windows_window_handle(window: Any) -> int | None:
+    """Best-effort extraction of the native HWND for a pywebview window."""
+    native = getattr(window, "native", None)
+    if native is not None:
+        for attr_name in ("Handle", "handle"):
+            handle = getattr(native, attr_name, None)
+            if handle is None:
+                continue
+            try:
+                to_int64 = getattr(handle, "ToInt64", None)
+                if callable(to_int64):
+                    value = to_int64()
+                    return value if isinstance(value, int) else int(str(value))
+                return int(handle)
+            except (TypeError, ValueError) as e:
+                logger.debug("Failed resolving handle attribute {}: {}", attr_name, e)
+                continue
+
+    title = getattr(window, "title", None)
+    if title:
+        import ctypes
+        from ctypes import wintypes
+
+        user32 = ctypes.windll.user32
+        user32.FindWindowW.argtypes = [wintypes.LPCWSTR, wintypes.LPCWSTR]
+        user32.FindWindowW.restype = wintypes.HWND
+
+        hwnd = user32.FindWindowW(None, title)
+        if hwnd:
+            return int(hwnd)
+
+    return None
+
+
+def _configure_desktop_auth(*, disable_auth: bool = False) -> None:
+    """Configure WebUI auth mode for desktop launches.
+
+    Rules:
+
+    * explicit environment wins;
+    * ``disable_auth=True`` forces ``kageCLAW_AUTH=false``;
+    * local Windows source runs default to auth disabled;
+    * frozen/packaged builds keep auth enabled unless explicitly overridden.
+    """
+    if os.environ.get("kageCLAW_AUTH", "").strip():
+        logger.debug("Desktop auth mode overridden via kageCLAW_AUTH={}", os.environ["kageCLAW_AUTH"])
+        return
+
+    if disable_auth:
+        os.environ["kageCLAW_AUTH"] = "false"
+        logger.info("Desktop auth disabled explicitly via launcher flag")
+        return
+
+    if get_os_type() == "windows" and not is_running_as_exe():
+        os.environ["kageCLAW_AUTH"] = "false"
+        logger.info("Desktop source mode on Windows: kageCLAW_AUTH=false")
+
+
+# ---------------------------------------------------------------------------
+# CLI shim: ``python -m kageclaw desktop``
+# (the actual typer command is registered in kageclaw/cli/commands.py)
+# ---------------------------------------------------------------------------
+
+if __name__ == "__main__":
+    run()

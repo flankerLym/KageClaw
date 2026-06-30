@@ -1,0 +1,241 @@
+"""Apply a kageClaw update using the normalized updater contract."""
+
+from __future__ import annotations
+
+import shutil
+import subprocess
+import sys
+from datetime import datetime
+from pathlib import Path
+from typing import Any, Callable
+
+import httpx
+from kageclaw.updater.detector import PYPI_PACKAGE, get_installation_method
+from kageclaw.updater.manifest import normalize_manifest_path
+
+
+def _old_dir(workspace_root: Path, new_version: str) -> Path:
+    """Return the _old/<version>/ directory inside the workspace root."""
+    date_str = datetime.now().strftime("%Y-%m-%d")
+    folder = workspace_root / "_old" / f"{date_str}_{new_version}"
+    folder.mkdir(parents=True, exist_ok=True)
+    return folder
+
+
+def _pip_upgrade(version: str | None) -> dict[str, Any]:
+    """Run a pip upgrade for the requested kageClaw version."""
+    target = f"{PYPI_PACKAGE}=={version}" if version else PYPI_PACKAGE
+    cmd = [sys.executable, "-m", "pip", "install", "--upgrade", target]
+    if Path("/.dockerenv").exists():
+        cmd.insert(-1, "--user")
+    try:
+        result = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            timeout=600,
+            check=False,
+        )
+    except Exception as exc:
+        return {"ok": False, "output": str(exc), "command": " ".join(cmd)}
+
+    success = result.returncode == 0
+    if success:
+        from kageclaw.updater.checker import invalidate_cache
+        invalidate_cache()
+        
+    return {
+        "ok": success,
+        "output": result.stdout + result.stderr,
+        "command": " ".join(cmd),
+    }
+
+
+def _exe_upgrade(version: str, download_url: str, progress_cb: Callable[[int, int], None] | None = None) -> dict[str, Any]:
+    """Download the Windows installer script and execute it in background."""
+    import tempfile
+    from kageclaw.config.paths import get_runtime_root
+
+    installer_url = "https://raw.githubusercontent.com/RikyZ90/kageClaw/main/scripts/install/install.ps1"
+    temp_ps1 = Path(tempfile.gettempdir()) / f"kageclaw_install_{version}.ps1"
+
+    downloaded = False
+    try:
+        with httpx.Client(follow_redirects=True, timeout=15.0) as client:
+            response = client.get(installer_url)
+            response.raise_for_status()
+            temp_ps1.write_text(response.text, encoding="utf-8")
+            downloaded = True
+    except Exception:
+        pass
+
+    if not downloaded:
+        bundled_ps1 = get_runtime_root() / "scripts" / "install" / "install.ps1"
+        if bundled_ps1.exists():
+            try:
+                shutil.copy2(str(bundled_ps1), str(temp_ps1))
+                downloaded = True
+            except Exception:
+                pass
+
+    if not downloaded:
+        return {"ok": False, "output": "Could not download or locate install.ps1 script."}
+
+    try:
+        detached_process = 0x00000008
+        create_new_process_group = 0x00000200
+        
+        cmd = [
+            "powershell.exe",
+            "-NoProfile",
+            "-ExecutionPolicy", "Bypass",
+            "-File", str(temp_ps1),
+            "-Version", version
+        ]
+
+        current_exe = Path(sys.executable).resolve()
+        if len(current_exe.parts) >= 4 and current_exe.parts[-3] == "app" and current_exe.parts[-4].lower() == ".kageclaw":
+            install_dir = current_exe.parents[2]
+            cmd.extend(["-InstallDir", str(install_dir)])
+
+        subprocess.Popen(
+            cmd,
+            creationflags=detached_process | create_new_process_group,
+            close_fds=True,
+            cwd=tempfile.gettempdir()
+        )
+        
+        return {"ok": True, "output": "Installer script launched successfully."}
+    except Exception as exc:
+        return {"ok": False, "output": f"Failed to launch installer: {exc}"}
+
+
+def _backup_personal_files(
+    manifest: dict[str, Any] | None,
+    workspace_root: Path,
+    version: str,
+) -> dict[str, Any]:
+    """Copy personal files (overwrite=False) to _old/ before applying an update."""
+    if not manifest:
+        return {"moved": [], "skipped": []}
+
+    old_dir = _old_dir(workspace_root, version or "unknown")
+    moved: list[dict[str, str]] = []
+    skipped: list[str] = []
+
+    for change in manifest.get("changes", []):
+        rel_path = normalize_manifest_path(change.get("path", ""))
+        overwrite = change.get("overwrite", True)
+        if not rel_path or overwrite:
+            if rel_path:
+                skipped.append(rel_path)
+            continue
+
+        local_file = workspace_root / rel_path
+        if not local_file.exists():
+            skipped.append(rel_path)
+            continue
+
+        dest = old_dir / rel_path
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(str(local_file), str(dest))
+        moved.append({"from": str(local_file), "to": str(dest)})
+
+    return {"moved": moved, "skipped": skipped}
+
+
+def _normalize_update_request(
+    update_info: dict[str, Any] | None,
+    manifest: dict[str, Any] | None,
+) -> dict[str, Any]:
+    normalized = dict(update_info or {})
+    install_method = normalized.get("install_method") or get_installation_method()
+    latest = normalized.get("latest") or (manifest or {}).get("version")
+
+    normalized.setdefault("install_method", install_method)
+    normalized.setdefault("latest", latest)
+    
+    if install_method in ("pip", "exe"):
+        normalized.setdefault("action_kind", "automatic")
+    else:
+        normalized.setdefault("action_kind", "manual-command")
+    normalized.setdefault(
+        "action_label",
+        "Update now" if install_method in ("pip", "exe") else "Run suggested update command",
+    )
+    
+    default_cmd = "git pull --ff-only && pip install -e ."
+    if install_method == "pip":
+        default_cmd = "pip install --upgrade kageclaw"
+    elif install_method == "exe":
+        default_cmd = 'powershell -c "irm https://raw.githubusercontent.com/RikyZ90/kageClaw/main/scripts/install/install.ps1 | iex"'
+        
+    normalized.setdefault("action_command", default_cmd)
+    return normalized
+
+
+def _manual_report(update_info: dict[str, Any], version: str) -> dict[str, Any]:
+    install_method = update_info.get("install_method") or "source"
+    action_target = update_info.get("action_command") or update_info.get("action_url")
+    message = update_info.get("summary") or "This update must be applied manually."
+    if action_target:
+        message = f"{message} Suggested action: {action_target}"
+
+    return {
+        "install_method": install_method,
+        "version": version,
+        "requires_manual_action": True,
+        "restarting": False,
+        "action_kind": update_info.get("action_kind"),
+        "action_label": update_info.get("action_label"),
+        "action_command": update_info.get("action_command"),
+        "action_url": update_info.get("action_url") or update_info.get("release_url"),
+        "message": message,
+        "backup": {"moved": [], "skipped": []},
+        "pip": None,
+    }
+
+
+def apply_update(
+    update_info: dict[str, Any] | None,
+    workspace_root: Path,
+    *,
+    manifest: dict[str, Any] | None = None,
+    progress_cb: Callable[[int, int], None] | None = None,
+) -> dict[str, Any]:
+    """Apply an update or return a manual-action report for non-pip/non-exe installs."""
+    normalized = _normalize_update_request(update_info, manifest)
+    install_method = normalized["install_method"]
+    version = normalized.get("latest") or (manifest or {}).get("version") or "unknown"
+
+    if install_method not in ("pip", "exe") or normalized.get("action_kind") != "automatic":
+        return _manual_report(normalized, version)
+
+    backup = _backup_personal_files(manifest, workspace_root, version)
+    
+    if install_method == "exe":
+        download_url = normalized.get("action_url") or normalized.get("download_url")
+        apply_result = _exe_upgrade(version, download_url, progress_cb)
+    else:
+        apply_result = _pip_upgrade(version)
+        
+    message = (
+        f"Updated kageClaw to {version}."
+        if apply_result.get("ok")
+        else f"Failed to update kageClaw to {version}."
+    )
+
+    return {
+        "install_method": install_method,
+        "version": version,
+        "requires_manual_action": False,
+        "restarting": False,
+        "action_kind": normalized.get("action_kind"),
+        "action_label": normalized.get("action_label"),
+        "action_command": normalized.get("action_command"),
+        "action_url": normalized.get("action_url") or normalized.get("release_url"),
+        "message": message,
+        "pip": apply_result if install_method == "pip" else None,
+        "exe": apply_result if install_method == "exe" else None,
+        "backup": backup,
+    }
